@@ -1,0 +1,7 @@
+.error {
+    -fx-text-fill: red;
+}
+
+.emphasis {
+    -fx-text-fill: blue
+}

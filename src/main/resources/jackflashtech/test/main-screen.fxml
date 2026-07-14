@@ -1,0 +1,24 @@
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx/2.2" fx:controller="jackflashtech.test.Controller">
+    <children>
+        <HBox>
+            <VBox>
+                <TextField fx:id="textBox">5</TextField>
+                <TextField fx:id="textBox2">Something</TextField>
+                <TextField fx:id="textBox3" disable="true" />
+            </VBox>
+            <VBox>
+                <TextField fx:id="textBox4">Things</TextField>
+                <TextField fx:id="textBox5" disable="true" />
+            </VBox>
+            <VBox>
+                <CheckBox fx:id="checkBox1" selected="true"></CheckBox>
+                <CheckBox fx:id="checkBox2" selected="true"></CheckBox>
+                <CheckBox fx:id="checkBox3" selected="true"></CheckBox>
+                <TextField fx:id="textBox6"></TextField>
+            </VBox>
+        </HBox>
+    </children>
+</StackPane>
