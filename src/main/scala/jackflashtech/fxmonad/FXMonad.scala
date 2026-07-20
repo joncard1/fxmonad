@@ -9,99 +9,209 @@ import scala.compiletime.uninitialized
 import scala.reflect.ClassTag
 import scalafx.scene.control.CheckBox
 import jackflashtech.fxmonad._
-import jackflashtech.fxmonad.sfx.{CheckBoxControlBoolean, CheckBoxControlInt, CheckBoxControlString}
+import jackflashtech.fxmonad.sfx.{
+  CheckBoxControlBoolean,
+  CheckBoxControlInt,
+  CheckBoxControlString
+}
 import jackflashtech.fxmonad.sfx.{TextFieldControlInt, TextFieldControlString}
+import java.util.concurrent.atomic.AtomicReference
+import scala.annotation.tailrec
+import jackflashtech.fxmonad.sfx.SliderControlInt
+import jackflashtech.fxmonad.sfx.SliderControlDouble
+import scalafx.beans.property.StringProperty
+import scalafx.beans.property.IntegerProperty
+import scalafx.beans.property.BooleanProperty
+import scalafx.beans.property.DoubleProperty
 
-/**
-  * This is a macro annotation that initializes a class correctly to create a controller for JavaFX, and sets the properties up to use the FXMonad system.
+object FXMonad {
+  import jackflashtech.fxmonad.Control.given
+
+  val lookups: AtomicReference[Map[Class[?], List[
+    PartialFunction[javafx.scene.control.Control, Control[?]]
+  ]]] = AtomicReference(
+    Map(
+      (classOf[String]) -> List({
+        case c: javafx.scene.control.TextField =>
+          ControlContainer(
+            new StringProperty(),
+            TextFieldControlString(scalafx.scene.control.TextField(c))
+          )
+        case c: javafx.scene.control.CheckBox =>
+          ControlContainer(
+            new StringProperty(),
+            CheckBoxControlString(scalafx.scene.control.CheckBox(c))
+          )
+      }),
+      (classOf[Int]) -> List({
+        case c: javafx.scene.control.CheckBox =>
+          ControlContainer(
+            new IntegerProperty(),
+            CheckBoxControlInt(scalafx.scene.control.CheckBox(c))
+          )
+        case c: javafx.scene.control.Slider =>
+          ControlContainer(
+            new IntegerProperty(),
+            SliderControlInt(scalafx.scene.control.Slider(c)))
+        case c: javafx.scene.control.TextField =>
+          ControlContainer(
+            new IntegerProperty(),
+            TextFieldControlInt(scalafx.scene.control.TextField(c))
+          )
+      }),
+      (classOf[Boolean]) -> List({ case c: javafx.scene.control.CheckBox =>
+        ControlContainer(
+          new BooleanProperty(),
+          CheckBoxControlBoolean(scalafx.scene.control.CheckBox(c))
+        )
+      }),
+      (classOf[Double]) -> List({ case c: javafx.scene.control.Slider =>
+        ControlContainer(
+          new DoubleProperty(),
+          SliderControlDouble(scalafx.scene.control.Slider(c))
+        )
+      })
+    )
+  )
+
+  def lookupControl(
+      typ: Class[?],
+      control: javafx.scene.control.Control
+  ): Control[?] = {
+    @tailrec
+    def lookupInternal(
+        control: javafx.scene.control.Control,
+        lookupList: List[
+          PartialFunction[javafx.scene.control.Control, Control[?]]
+        ]
+    ): Option[Control[?]] = {
+      lookupList match {
+        case Nil          => None
+        case head :: tail =>
+          if (head.isDefinedAt(control)) {
+            Some(head(control))
+          } else {
+            lookupInternal(control, tail)
+          }
+      }
+    }
+    lookupInternal(control, lookups.get.getOrElse(typ, List())) match {
+      case None    => throw new Exception("Failed to find proper control")
+      case Some(c) => c
+    }
+  }
+}
+
+/** This is a macro annotation that initializes a class correctly to create a
+  * controller for JavaFX, and sets the properties up to use the FXMonad system.
   *
   * @param id
   * @param controlTypeName
   */
 @experimental
-class FXMonad(id: String, controlTypeName: String) extends MacroAnnotation {
+class FXMonad(id: String) extends MacroAnnotation {
 
-    override def transform(using quotes: Quotes)(definition: quotes.reflect.Definition, companion: Option[quotes.reflect.Definition]): List[quotes.reflect.Definition] = {
-        import quotes.reflect.*
-        import Control.given
+  override def transform(using
+      quotes: Quotes
+  )(
+      definition: quotes.reflect.Definition,
+      companion: Option[quotes.reflect.Definition]
+  ): List[quotes.reflect.Definition] = {
+    import quotes.reflect.*
 
-        // This is the bit that looks like a bad idea from https://stackoverflow.com/questions/75669835/add-annotation-to-a-method-defined-using-a-symbol-newmethod
-        extension (symb: Symbol)
-            def addAnnotation(annotation: Term): Symbol =
-                given dotty.tools.dotc.core.Contexts.Context =
-                quotes.asInstanceOf[scala.quoted.runtime.impl.QuotesImpl].ctx
-                symb.asInstanceOf[dotty.tools.dotc.core.Symbols.Symbol]
-                    .denot
-                    .addAnnotation(
-                        dotty.tools.dotc.core.Annotations.ConcreteAnnotation(
-                            annotation.asInstanceOf[dotty.tools.dotc.ast.tpd.Tree]
-                        )
-                    )
-                symb
+    // This is the bit that looks like a bad idea from https://stackoverflow.com/questions/75669835/add-annotation-to-a-method-defined-using-a-symbol-newmethod
+    extension (symb: Symbol)
+      def addAnnotation(annotation: Term): Symbol =
+        given dotty.tools.dotc.core.Contexts.Context =
+          quotes.asInstanceOf[scala.quoted.runtime.impl.QuotesImpl].ctx
+        symb
+          .asInstanceOf[dotty.tools.dotc.core.Symbols.Symbol]
+          .denot
+          .addAnnotation(
+            dotty.tools.dotc.core.Annotations.ConcreteAnnotation(
+              annotation.asInstanceOf[dotty.tools.dotc.ast.tpd.Tree]
+            )
+          )
+        symb
 
+    definition match {
+      case ValDef(name, tt, term) =>
+        if (name.equals(id)) then
+          report.errorAndAbort(
+            s"The name of the control, ${name}, should not be the same as the fx:id provided to the annotation."
+          )
 
-        definition match {
-            case ValDef(name, tt, term) =>   
-                val annotationSymbol = Symbol.requiredPackage("javafx.fxml").typeMember("FXML")
-                val typeTree = TypeTree.of(using annotationSymbol.typeRef.asType)
-                val annotationConstructor = annotationSymbol.primaryConstructor
-                val jfxControlTypeSymbol = Symbol.classSymbol(controlTypeName)
-                val jfxControlSymbol =  Symbol.newVal(Symbol.spliceOwner, id, jfxControlTypeSymbol.typeRef, Flags.Private | Flags.Mutable, Symbol.noSymbol).addAnnotation(Apply(Select(New(typeTree), annotationConstructor), List()))
-                if (!jfxControlSymbol.isDefinedInCurrentRun) {
-                    report.errorAndAbort(s"Failed to find member $id of ${Symbol.spliceOwner.toString()}")
-                }
-                val jfxControlRef = Ref(jfxControlSymbol)
-                val jfxControlDef = ValDef(jfxControlSymbol, Some(Literal(NullConstant())))
-
-                val controlSymbol = definition.symbol
-                
-                // I wanted this to perform this match at runtime so that it would be extensible, but I couldn't get it to work. I wanted something like:
-                // {
-                //  val matchers: List[PartialFunction[javafx.scene.control.Control, Control[A]]] = lookupTableOfSomekind(classOf[tt.tpe.asType]) 
-                //  matchers.reduce(...) or something that chains the PartialFunction list together with orElse, something like collect but in reverse, doing
-                //  ${jfxControlRef.asExprOf[javafx.scene.control.Control]} match {
-                //      case c: TextField => ...
-                //      case c: CheckBox => ...
-                //      ...
-                //  }
-                // }
-                // And users could provide a collection of PartialFunction[javafx.scene.control.Control, Control[A]] that get chained together.
-                val controlDef = (jfxControlTypeSymbol.typeRef.asType, tt.tpe.asType) match {
-                    case ('[javafx.scene.control.TextField], '[Control[Int, ?]]) => 
-                        ValDef(controlSymbol, Some(
-                            '{
-                                ControlContainer(TextFieldControlInt(new TextField(${jfxControlRef.asExprOf[javafx.scene.control.TextField]})))
-                            }.asTerm
-                        ))
-                    case ('[javafx.scene.control.TextField], '[Control[String, ?]]) =>
-                        ValDef(controlSymbol, Some(
-                            '{
-                                ControlContainer(TextFieldControlString(new TextField(${jfxControlRef.asExprOf[javafx.scene.control.TextField]})))
-                            }.asTerm
-                        ))
-                    case ('[javafx.scene.control.CheckBox], '[Control[Boolean, ?]]) =>
-                        ValDef(controlSymbol, Some(
-                            '{
-                                ControlContainer(CheckBoxControlBoolean(new CheckBox(${jfxControlRef.asExprOf[javafx.scene.control.CheckBox]})))
-                            }.asTerm
-                        ))
-                    case ('[javafx.scene.control.CheckBox], '[Control[Int, ?]]) =>
-                        ValDef(controlSymbol, Some(
-                            '{
-                                ControlContainer(CheckBoxControlInt(new CheckBox(${jfxControlRef.asExprOf[javafx.scene.control.CheckBox]})))
-                            }.asTerm
-                        ))
-                    case ('[javafx.scene.control.CheckBox], '[Control[String, ?]]) =>
-                        ValDef(controlSymbol, Some(
-                            '{
-                                ControlContainer(CheckBoxControlString(new CheckBox(${jfxControlRef.asExprOf[javafx.scene.control.CheckBox]})))
-                            }.asTerm
-                        ))
-                    case (x, y) => report.errorAndAbort(s"Unrecognized combination of controls and types: ${jfxControlTypeSymbol.typeRef.show} and ${tt.tpe.show}")
-                }
-                List(jfxControlDef, controlDef)
-            case _: Definition => 
-                report.errorAndAbort("Don't know what to do with this")
+        val annotationSymbol =
+          Symbol.requiredPackage("javafx.fxml").typeMember("FXML")
+        val typeTree = TypeTree.of(using annotationSymbol.typeRef.asType)
+        val annotationConstructor = annotationSymbol.primaryConstructor
+        val jfxControlTypeSymbol =
+          Symbol.classSymbol("javafx.scene.control.Control")
+        val jfxControlSymbol = Symbol
+          .newVal(
+            Symbol.spliceOwner,
+            id,
+            jfxControlTypeSymbol.typeRef,
+            Flags.Private | Flags.Mutable,
+            Symbol.noSymbol
+          )
+          .addAnnotation(
+            Apply(Select(New(typeTree), annotationConstructor), List())
+          )
+        // TODO: Possibly check whether the jfxControlSymbol is already defined. If it is, don't redefine it; allow the user to define the property themselves if they plan on accessing it in their code.
+        val jfxControlRef = Ref(jfxControlSymbol)
+        val controls = if (false) /* TODO: if the symbol is aleady defined */ {
+          List()
+        } else {
+          val jfxControlDef =
+            ValDef(jfxControlSymbol, Some(Literal(NullConstant())))
+          List(jfxControlDef)
         }
+
+        val controlSymbol = definition.symbol
+
+        val controlDef = tt.tpe.typeArgs match {
+          case Nil =>
+            report.errorAndAbort(
+              "The Control type should have 2 type arguments"
+            )
+          case controlType :: tail =>
+            val controlTypeTree = TypeTree.of(using controlType.asType)
+            Symbol
+              .requiredPackage("scala.Predef")
+              .methodMember("classOf") match {
+              case Nil =>
+                report.errorAndAbort(
+                  "Something has gone very wrong if I can't find scala.Predef.classOf"
+                )
+              case classOfSymbol :: tail =>
+                val classOfTerm =
+                  TypeApply(Ref(classOfSymbol), List(controlTypeTree))
+                ValDef(
+                  controlSymbol,
+                  Some('{
+                    if (
+                      ${
+                        jfxControlRef.asExprOf[javafx.scene.control.Control]
+                      } == null
+                    )
+                      throw Exception(
+                        "JavaFX seems not to have initialized the underlying control " + ${
+                          Expr(id)
+                        }
+                      )
+                    FXMonad.lookupControl(
+                      ${ classOfTerm.asExprOf[Class[?]] },
+                      ${ jfxControlRef.asExprOf[javafx.scene.control.Control] }
+                    )
+                  }.asTerm)
+                )
+            }
+        }
+        controls ::: List(controlDef)
+      case _: Definition =>
+        // TODO: This is a bad error message
+        report.errorAndAbort("Don't know what to do with this")
     }
+  }
 }

@@ -16,6 +16,8 @@ import scalafx.collections.ObservableBuffer.Remove
 import scalafx.collections.ObservableBuffer.Reorder
 import scalafx.collections.ObservableBuffer.Update
 import sfxc.CheckBox
+import sfxc.Slider
+import sfxc.Label
 
 case class Change(propertyName: String, oldVal: Any, newVal: Any)
 
@@ -158,6 +160,34 @@ class CheckBoxProxy extends CheckBox with SFXProxy[CheckBox] {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("selected", _, _) =>
         control.selected() = c.newVal.asInstanceOf[Boolean]
+    }
+    localChange.orElse(super.applyChangesPF(control))
+  }
+}
+
+class SliderProxy extends Slider with SFXProxy[Slider] {
+    value.onChange((prop, oldVal, newVal) => {
+      changes = Change("value", oldVal, newVal) :: changes
+    })
+
+    override protected def applyChangesPF(control: sfxc.Slider): PartialFunction[Change, Unit] = {
+      val localChange: PartialFunction[Change, Unit] = {
+        case c @ Change("value", _, _) => 
+          control.value() = c.newVal.asInstanceOf[Double]
+      }
+      localChange.orElse(super.applyChangesPF(control))
+    }
+}
+
+class LabelProxy extends Label with SFXProxy[Label] {
+  text.onChange((prox, oldVal, newVal) => {
+    changes = Change("text", oldVal, newVal) :: changes
+  })
+
+  override protected def applyChangesPF(control: sfxc.Label): PartialFunction[Change, Unit] = {
+    val localChange: PartialFunction[Change, Unit] = {
+      case c @ Change("text", _, _) =>
+        control.text() = c.newVal.asInstanceOf[String]
     }
     localChange.orElse(super.applyChangesPF(control))
   }

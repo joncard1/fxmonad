@@ -10,8 +10,9 @@ import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 import jackflashtech.fxmonad.Control
+import jackflashtech.fxmonad.SFXControl
 
-abstract class CheckBoxControl[COut](override val defaultProperty: Property[COut, ?], control: CheckBox)(using inConversion: Conversion[COut, Boolean], outConversion: Conversion[Boolean, COut]) extends Control[COut, Boolean](using inConversion, outConversion) {
+abstract class CheckBoxControl[COut](override val defaultProperty: Property[COut, ?], control: CheckBox)(using inConversion: Conversion[COut, Boolean], outConversion: Conversion[Boolean, COut]) extends SFXControl[COut, Boolean, CheckBox](control)(using inConversion, outConversion) {
     override protected[fxmonad] def showError(errorMsg: String): Unit = control.tooltip() = Tooltip(errorMsg)
     override protected[fxmonad] def clearError(): Unit = control.tooltip() = null
 

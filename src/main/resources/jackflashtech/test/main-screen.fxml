@@ -3,22 +3,35 @@
 
 <StackPane xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx/2.2" fx:controller="jackflashtech.test.Controller">
     <children>
-        <HBox>
-            <VBox>
-                <TextField fx:id="textBox">5</TextField>
-                <TextField fx:id="textBox2">Something</TextField>
-                <TextField fx:id="textBox3" disable="true" />
-            </VBox>
-            <VBox>
-                <TextField fx:id="textBox4">Things</TextField>
-                <TextField fx:id="textBox5" disable="true" />
-            </VBox>
-            <VBox>
-                <CheckBox fx:id="checkBox1" selected="true"></CheckBox>
-                <CheckBox fx:id="checkBox2" selected="true"></CheckBox>
-                <CheckBox fx:id="checkBox3" selected="true"></CheckBox>
-                <TextField fx:id="textBox6"></TextField>
-            </VBox>
-        </HBox>
+        <VBox>
+            <HBox>
+                <VBox>
+                    <Slider fx:id="ageControl" max="5.0" min="0.0" />
+                    <!-- <TextField fx:id="ageControl">0</TextField> -->
+                    <TextField fx:id="ageOutput" disable="true" />
+                </VBox>
+                <VBox>
+                    <Slider fx:id="temperatureSlider" max="20.0" min="10.0" majorTickUnit="1.0" minorTickCount="4" snapToTicks="true" showTickMarks="true" blockIncrement="0.1" />
+                    <TextField fx:id="temperatureOutput" disable="true" />
+                </VBox>
+            </HBox>
+            <HBox>
+                <VBox>
+                    <TextField fx:id="textBox">5</TextField>
+                    <TextField fx:id="textBox2">Something</TextField>
+                    <TextField fx:id="textBox3" disable="true" />
+                </VBox>
+                <VBox>
+                    <TextField fx:id="textBox4">Things</TextField>
+                    <TextField fx:id="textBox5" disable="true" />
+                </VBox>
+                <VBox>
+                    <CheckBox fx:id="checkBox1" selected="true"></CheckBox>
+                    <CheckBox fx:id="checkBox2" selected="true"></CheckBox>
+                    <CheckBox fx:id="checkBox3" selected="true"></CheckBox>
+                    <TextField fx:id="textBox6"></TextField>
+                </VBox>
+            </HBox>
+        </VBox>
     </children>
 </StackPane>

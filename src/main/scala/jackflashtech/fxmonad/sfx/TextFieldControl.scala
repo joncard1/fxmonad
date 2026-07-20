@@ -46,5 +46,26 @@ abstract class TextFieldControl[COut](override val defaultProperty: Property[COu
     updateProperty(control.text())
 }
 
-class TextFieldControlInt(control: TextField = new TextFieldProxy())(using inConversion: Conversion[Int, String], outConversion: Conversion[String, Int]) extends TextFieldControl[Int](new IntegerProperty(), control)(using inConversion, outConversion)
-class TextFieldControlString(control: TextField = new TextFieldProxy())(using inConversion: Conversion[String, String], outConversion: Conversion[String, String]) extends TextFieldControl[String](StringProperty(""), control)(using inConversion, outConversion)
+class TextFieldControlInt(control: TextField = new TextFieldProxy())(using inConversion: Conversion[Int, String], outConversion: Conversion[String, Int]) extends TextFieldControl[Int](new IntegerProperty(), control)(using inConversion, outConversion) {
+    def this(initialValue: Int)(using inConversion: Conversion[Int, String], outconversion: Conversion[String, Int]) = {
+        this()
+        this.defaultProperty() = initialValue
+    }
+
+    def this(initialValue: Int, control: TextField)(using inConversion: Conversion[Int, String], outConversion: Conversion[String, Int]) = {
+        this(control)
+        this.defaultProperty() = initialValue
+    }
+
+}
+class TextFieldControlString(control: TextField = new TextFieldProxy())(using inConversion: Conversion[String, String], outConversion: Conversion[String, String]) extends TextFieldControl[String](StringProperty(""), control)(using inConversion, outConversion) {
+    def this(initialValue: String)(using inConversion: Conversion[String, String], outConversion: Conversion[String, String]) = {
+        this()(using inConversion, outConversion)
+        this.defaultProperty() = initialValue
+    }
+
+    def this(initialValue: String, control: TextField)(using inConversion: Conversion[String, String], outConversion: Conversion[String, String]) = {
+        this(control)(using inConversion, outConversion)
+        this.defaultProperty() = initialValue
+    }
+}

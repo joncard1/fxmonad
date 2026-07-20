@@ -15,12 +15,22 @@ import scala.util.Success
 import scala.util.Failure
 import scalafx.beans.property.BooleanProperty
 import jackflashtech.fxmonad.sfx._
+import javafx.scene.layout.Pane
+import scalafx.application.Platform
+import scalafx.event.subscriptions.Subscription
+import jackflashtech.{fxmonad => clearError}
 
 object Control {
-    given Conversion[Boolean, Boolean] = (x: Boolean) => x
-    given Conversion[String, String] = (x: String) => x
+    // TODO: I wonder if I'd prefer to define my own type of thing like Conversion but which was MyConversion[A, B] = (A) => Try[B] or (A) => Either[String, B] so I could define the error message in the converter instead of the control.
+
+    private def selfConversion[A]() : Conversion[A, A] = (x: A) => x
+    given Conversion[Boolean, Boolean] = selfConversion()
+    given Conversion[String, String] = selfConversion()
+    given Conversion[Double, Double] = selfConversion()
     given Conversion[String, Int] = (x: String) => x.toInt
     given Conversion[Int, String] = (x: Int) => x.toString()
+    given Conversion[Int, Double] = (x: Int) => x.toDouble
+    given Conversion[Double, Int] = (x: Double) => x.toInt
     given Conversion[String, Boolean] = (x: String) => x match {
         case "true" => true
         case _ => false
@@ -35,11 +45,7 @@ object Control {
 
 }
 
-abstract class Control[COut, CIn](using inConversion: Conversion[COut, CIn], outConversion: Conversion[CIn, COut]) { 
-    protected var binder: Option[ControlBinder[COut]] = None
-
-    val defaultProperty: Property[COut, ?]
-
+abstract class ControlBase[COut, CIn](using inConversion: Conversion[COut, CIn], outConversion: Conversion[CIn, COut]) extends Control[COut] {
     /**
       * Utility class to update the property associated with this class using the value of the contained control.
       *
@@ -58,6 +64,12 @@ abstract class Control[COut, CIn](using inConversion: Conversion[COut, CIn], out
             }
         }
     }
+}
+
+abstract class Control[COut] { 
+    protected var binder: Option[ControlBinder[COut]] = None
+
+    val defaultProperty: Property[COut, ?]
 
     protected[fxmonad] def showError(errorMsg: String): Unit
 
@@ -65,9 +77,12 @@ abstract class Control[COut, CIn](using inConversion: Conversion[COut, CIn], out
 
 
     //def map[B](f: (COut) => B): Control[B, ?] = new CarrierControl(f(defaultProperty()))
-    def flatMap[B](f: (x: COut) => Control[B, ?]): Control[B, ?] = f(defaultProperty())
+    def flatMap[B](f: (x: COut) => Control[B]): Control[B] = f(defaultProperty())
 
-    def update[B](control1: Control[B, ?], f: B => Control[COut, ?]): Unit = {
+    def apply(): COut = defaultProperty()
+    def update(newVal: COut) = defaultProperty() = newVal
+
+    def update[B](control1: Control[B], f: B => Control[COut]): Unit = {
         binder = {
             binder match {
                 case None =>
@@ -78,7 +93,7 @@ abstract class Control[COut, CIn](using inConversion: Conversion[COut, CIn], out
         binder.flatMap(x => Option(x.updateValue())).get
     }
 
-    def update[B, C](control1: Control[B, ?], control2: Control[C, ?], f: (B, C) => Control[COut, ?]): Unit = {
+    def update[B, C](control1: Control[B], control2: Control[C], f: (B, C) => Control[COut]): Unit = {
         binder = {
             binder match {
                 case None =>
@@ -89,7 +104,7 @@ abstract class Control[COut, CIn](using inConversion: Conversion[COut, CIn], out
         binder.flatMap(x => Option(x.updateValue())).get
     }
 
-    def update[B, C, D](control1: Control[B, ?], control2: Control[C, ?], control3: Control[D, ?], f: (B, C, D) => Control[COut, ?]): Unit = {
+    def update[B, C, D](control1: Control[B], control2: Control[C], control3: Control[D], f: (B, C, D) => Control[COut]): Unit = {
         binder = {
             binder match {
                 case None =>
@@ -131,28 +146,73 @@ class CarrierControl[A](value: A)(using inConversion: Conversion[COut, CIn], out
 */
 // TODO: I think the purpose of this one is to give the system a chance to replace the control internally
 // TODO: I wonder if CIn on this object should be the COut of the contained control?
-class ControlContainer[COut, CIn](val control: Control[COut, CIn])(using inConversion: Conversion[COut, CIn], outConversion: Conversion[CIn, COut]) extends Control[COut, CIn](using inConversion, outConversion) {
+// TODO: I wonder if the types can be like Control[COut] -> ControlContainer[COut], ControlBase[COut, CIn] (which contains updateProperty) -> SFXControl -> all the others
+class ControlContainer[COut](override val defaultProperty: Property[COut, ?],  val control: Control[COut]) extends Control[COut] {
 
-    private var wrappedControl = control
+    private var wrappedControl: Control[COut] = scala.compiletime.uninitialized
+    private var wrappedSubscription: Option[Subscription] = None
 
-    override val defaultProperty: Property[COut, ?] = wrappedControl.defaultProperty
+    private def setWrappedControl(control: Control[COut]) = {
+        wrappedSubscription.map(_.cancel())
+        wrappedControl = control
+        wrappedSubscription = Some(wrappedControl.defaultProperty.onChange((_, _, _) => {
+            // TODO: This is broken because the ScalaFX wrapper around the JavaFX properties isn't broken-ish
+            defaultProperty() = control.defaultProperty()
+        }))
+    }
+    setWrappedControl(control)
+    defaultProperty.onChange((_, _, newVal) => {
+        wrappedControl.defaultProperty() = defaultProperty()
+    })
 
-    override protected[fxmonad] def showError(errorMsg: String): Unit = wrappedControl.showError(errorMsg)
+    override protected[fxmonad] def showError(errorMsg: String): Unit = {
+        wrappedControl.showError(errorMsg)
+    }
 
-    override protected[fxmonad] def clearError(): Unit = wrappedControl.clearError()
+    override protected[fxmonad] def clearError(): Unit = {
+        wrappedControl.clearError()
+    }
 
     // TODO: It seems both 1. a problem and 2. necessary for the internal type to change. The only impact, really, is to use a different conversion internally and to change the signature of updateProperty. Does it need to be part of the external type declaration?
-    protected[fxmonad] def replaceControl(newControl: Control[COut, ?]) = {
+    protected[fxmonad] def replaceControl(newControl: Control[COut]) = {
         // TODO: If the new control has a different inner type than control, replace the wrapped control in the JavaFX tree with the new control and keep the passed-in control as the new wrapped control. Which seems like it'll probably be a nightmare.
         // TODO: This is a lot of the same logic as in ControlBinder#update, except for ControlBinder deferring to ControlContainer.
-        /* 
-        if a bunch of checks I can't think through right now pass, replace the wrapped control with the new control.
-        else {
-         */
+        
+        def defaultBehavior() = {
             wrappedControl.defaultProperty() = newControl.defaultProperty()
-        //}
+        }
+
+        // TODO: This is at least the beginning of the checks that are needed.
+        // TODO: Add checks if newControl isn't Control[COut, CIn], it won't work to replace the control.
+        // TODO: Which, of course, can't be done because of type erasure
+        if((wrappedControl.isInstanceOf[SFXControl[?, ?, ?]]) &&
+            (newControl.isInstanceOf[SFXControl[COut, ?, ?]]) &&
+            (wrappedControl.asInstanceOf[SFXControl[?, ?, ?]].control.getClass != newControl.asInstanceOf[SFXControl[COut, ?, ?]].control.getClass()) &&
+            !(newControl.asInstanceOf[SFXControl[?, ?, ?]].control.isInstanceOf[SFXProxy[?]])) {
+            val wrappedControlSfx = wrappedControl.asInstanceOf[SFXControl[?, ?, ?]]
+            val newControlSfx = newControl.asInstanceOf[SFXControl[COut, ?, ?]]
+            val wrappedControlParent = wrappedControlSfx.control.parent()
+            if (wrappedControlParent.isInstanceOf[Pane]) {
+                val wrappedControlPane = wrappedControlParent.asInstanceOf[Pane]
+                Platform.runLater {
+                    // TODO: This should replace the other control in the same index
+                    val index = wrappedControlPane.getChildren().indexOf(wrappedControlSfx.control.delegate)
+                    if (index > -1) {
+                        wrappedControlPane.getChildren().remove(wrappedControlSfx.control.delegate)
+                        wrappedControlPane.getChildren().add(index, newControlSfx.control.delegate)
+                    } else {/* TODO: This probably needs something more. */}
+                    
+                    //wrappedControlPane.getChildren().forEach(x => println(x.toString()))
+                }
+                wrappedControl = newControlSfx
+            } else {
+                defaultBehavior()
+            }
+        } else {
+            defaultBehavior()
+        }
     }
 }
 
 // TODO: This should probably be moved somewhere else.
-abstract class SFXControl[COut, CIn, InnerControl <: scalafx.scene.control.Control](val control: InnerControl)(using inConversion: Conversion[COut, CIn], outConversion: Conversion[CIn, COut]) extends Control(using inConversion, outConversion)
+abstract class SFXControl[COut, CIn, InnerControl <: scalafx.scene.control.Control](val control: InnerControl)(using inConversion: Conversion[COut, CIn], outConversion: Conversion[CIn, COut]) extends ControlBase(using inConversion, outConversion)
