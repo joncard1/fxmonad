@@ -159,6 +159,7 @@ class ControlContainer[COut](override val defaultProperty: Property[COut, ?],  v
             // TODO: This is broken because the ScalaFX wrapper around the JavaFX properties isn't broken-ish
             defaultProperty() = control.defaultProperty()
         }))
+        defaultProperty() = control.defaultProperty()
     }
     setWrappedControl(control)
     defaultProperty.onChange((_, _, newVal) => {
