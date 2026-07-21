@@ -6,6 +6,12 @@
         <VBox>
             <HBox>
                 <VBox>
+                    <ColorPicker fx:id="colorControl" />
+                    <TextField fx:id="colorOutput" disable="true" />
+                </VBox>
+            </HBox>
+            <HBox>
+                <VBox>
                     <Slider fx:id="ageControl" max="5.0" min="0.0" />
                     <!-- <TextField fx:id="ageControl">0</TextField> -->
                     <TextField fx:id="ageOutput" disable="true" />

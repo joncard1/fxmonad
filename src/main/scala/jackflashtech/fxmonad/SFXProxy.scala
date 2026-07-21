@@ -18,6 +18,8 @@ import scalafx.collections.ObservableBuffer.Update
 import sfxc.CheckBox
 import sfxc.Slider
 import sfxc.Label
+import sfxc.ColorPicker
+import scalafx.scene.paint.Color
 
 case class Change(propertyName: String, oldVal: Any, newVal: Any)
 
@@ -188,6 +190,20 @@ class LabelProxy extends Label with SFXProxy[Label] {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("text", _, _) =>
         control.text() = c.newVal.asInstanceOf[String]
+    }
+    localChange.orElse(super.applyChangesPF(control))
+  }
+}
+
+class ColorPickerProxy extends sfxc.ColorPicker with SFXProxy[ColorPicker] {
+  this.value.onChange((prox, oldVal, newVal) => {
+    changes = Change("value", oldVal, newVal) :: changes
+  })
+
+  override protected def applyChangesPF(control: ColorPicker): PartialFunction[Change, Unit] = {
+    val localChange: PartialFunction[Change, Unit] = {
+      case c @ Change("value", _, _) =>
+        control.value() = c.newVal.asInstanceOf[Color]
     }
     localChange.orElse(super.applyChangesPF(control))
   }

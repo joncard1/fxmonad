@@ -7,12 +7,19 @@ import javafx.fxml.FXML
 import jackflashtech.fxmonad._
 import jackflashtech.fxmonad.sfx.TextFieldControlString
 import jackflashtech.fxmonad.sfx.LabelControlString
+import scalafx.scene.paint.Color
 
 /** A controller that uses the fxmonad system in conjunction with the
   * ScalaFX/JavaFX system. This is used for testing use cases of the tools.
   */
 @experimental
 class Controller {
+
+  @FXMonad("colorControl")
+  lazy val color: Control[Color] = ???
+
+  @FXMonad("colorOutput")
+  lazy val colorOut: Control[String] = ???
 
   @FXMonad("ageControl")
   lazy val age: Control[Int] = ???
@@ -91,6 +98,10 @@ class Controller {
         } else {
           TextFieldControlString(s"Temperature: ${temperature}", new scalafx.scene.control.TextField())
         }
+    }
+    colorOut(color) = {
+      (color: Color) =>
+        TextFieldControlString(color.toString)
     }
   }
 }
