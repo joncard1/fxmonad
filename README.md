@@ -7,21 +7,20 @@ Any control expected to provide or consume an Int, for instance, is a Control[In
 Consider:
 
 ```
-val c1: Control[Int, ?] = ...
-val c2: Control[Boolean, ?] = ...
-val c3: Control[String, ?] = ...
+val c1: Control[Int] = ...
+val c2: Control[Boolean] = ...
+val c3: Control[String] = ...
 
 c3(c1, c2) = { (v1: Int, v2: Boolean) =>
-    val newC = TextFieldControlString()
+    val newC = TextFieldControlString(s"Value is ${v1}")
     if (v2) {
         newC.control.styleClass.add("emphasis")
     }
-    newC.defaultProperty() = s"Value is ${v1}"
     newC
 }
 ```
 
-Because c1 is a Control[Int, ?] and c2 is a Control[Boolean, ?], it is known that the function that produces the value for c3 will be f(Int, Boolean): Control[String, ?]. If c3 is based on a TextField, the style updates performed in the function will be displayed. If c3 is some other kind of control, the plan is it will be _replaced_ with a TextField, styled as specified. But, whatever happens, c3 is a control that expects to show a String.
+Because c1 is a Control[Int] and c2 is a Control[Boolean], it is known that the function that produces the value for c3 will be f(Int, Boolean): Control[String]. If c3 is based on a TextField, the style updates performed in the function will be displayed. If c3 is some other kind of control, it will be _replaced_ with a TextField, styled as specified. But, whatever happens, c3 is a control that expects to show a String.
 
 A lot of this is done already with property binding. However, this handles type validation, format checking, and frees up the work of extracting the value from controls from different properties. The logic functions are similar in concept to a Monad's "bind" operator (usually flatMap in Scala) and makes different controls more interoperable.
 
