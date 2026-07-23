@@ -1,8 +1,8 @@
-package jackflashtech.fxmonad.sfx
+package fxmonad.sfx
 
 import scalafx.beans.property.Property
 import scalafx.scene.control.TextField
-import jackflashtech.fxmonad.TextFieldProxy
+import fxmonad.TextFieldProxy
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
@@ -10,7 +10,7 @@ import scalafx.scene.control.Tooltip
 import scalafx.beans.property.IntegerProperty
 import scalafx.beans.property.StringProperty
 import scalafx.application.Platform
-import jackflashtech.fxmonad.SFXControl
+import fxmonad.SFXControl
 
 abstract class TextFieldControl[COut](override val defaultProperty: Property[COut, ?], control: TextField = new TextFieldProxy())(using inConversion: Conversion[COut, String], outConversion: Conversion[String, COut]) extends SFXControl[COut, String, TextField](control)(using inConversion, outConversion) {
 

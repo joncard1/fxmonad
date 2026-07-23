@@ -6,9 +6,9 @@ import javafx.{fxml => jfxf, scene => jfxs}
 import scalafx.scene.Scene
 import scalafx.Includes._
 import scala.annotation.experimental
-import jackflashtech.fxmonad.FXMonad
+import fxmonad.FXMonad
 import scalafx.scene.paint.Color
-import jackflashtech.fxmonad.sfx._
+import fxmonad.sfx._
 
 /** A simple ScalaFX application used for testing the use cases for this
   * project.

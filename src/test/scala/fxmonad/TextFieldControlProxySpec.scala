@@ -1,4 +1,4 @@
-package jackflashtech.fxmonad
+package fxmonad
 
 import scalafx.application.JFXApp3
 import scalafx.application.Platform

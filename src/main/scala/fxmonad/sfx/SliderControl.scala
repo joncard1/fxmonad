@@ -1,13 +1,13 @@
-package jackflashtech.fxmonad.sfx
+package fxmonad.sfx
 
 import scalafx.beans.property.Property
 import scalafx.scene.control.Slider
-import jackflashtech.fxmonad.SFXControl
+import fxmonad.SFXControl
 import scalafx.concurrent.Worker.State.Succeeded
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
-import jackflashtech.fxmonad.SliderProxy
+import fxmonad.SliderProxy
 import scalafx.beans.property.IntegerProperty
 import scalafx.application.Platform
 import scalafx.scene.control.Tooltip

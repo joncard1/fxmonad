@@ -1,12 +1,9 @@
 package jackflashtech.test
 
-import jackflashtech.fxmonad.Control
-import jackflashtech.fxmonad.FXMonad
+import fxmonad._
 import scala.annotation.experimental
 import javafx.fxml.FXML
-import jackflashtech.fxmonad._
-import jackflashtech.fxmonad.sfx.TextFieldControlString
-import jackflashtech.fxmonad.sfx.LabelControlString
+import fxmonad.sfx._
 import scalafx.scene.paint.Color
 
 /** A controller that uses the fxmonad system in conjunction with the
@@ -63,7 +60,7 @@ class Controller {
 
   @FXML
   def initialize() = {
-    import jackflashtech.fxmonad.Control.given
+    import fxmonad.Control.given
 
     textBoxC3(textBoxC, textBoxC2) = {
       (shouldBeInt: Int, shouldBeString: String) =>

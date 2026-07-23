@@ -1,4 +1,4 @@
-package jackflashtech.fxmonad
+package fxmonad
 
 import cats.Monad
 import scalafx.scene.control.TextField
@@ -14,11 +14,10 @@ import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 import scalafx.beans.property.BooleanProperty
-import jackflashtech.fxmonad.sfx._
+import fxmonad.sfx._
 import javafx.scene.layout.Pane
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
-import jackflashtech.{fxmonad => clearError}
 
 object Control {
     // TODO: I wonder if I'd prefer to define my own type of thing like Conversion but which was MyConversion[A, B] = (A) => Try[B] or (A) => Either[String, B] so I could define the error message in the converter instead of the control.

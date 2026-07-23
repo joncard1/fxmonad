@@ -1,13 +1,13 @@
-package jackflashtech.fxmonad.sfx
+package fxmonad.sfx
 
 import scalafx.scene.control.Label
-import jackflashtech.fxmonad.SFXControl
+import fxmonad.SFXControl
 import scalafx.beans.property.Property
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 import scalafx.application.Platform
-import jackflashtech.fxmonad.LabelProxy
+import fxmonad.LabelProxy
 import scalafx.beans.property.StringProperty
 
 abstract class LabelControl[COut](override val defaultProperty: Property[COut, ?], control: Label = new LabelProxy())(using inConversion: Conversion[COut, String], outConversion: Conversion[String, COut]) extends SFXControl[COut, String, Label](control)(using inConversion, outConversion) {

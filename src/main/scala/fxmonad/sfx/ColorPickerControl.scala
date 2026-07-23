@@ -1,10 +1,10 @@
-package jackflashtech.fxmonad.sfx
+package fxmonad.sfx
 
 import scalafx.scene.control.ColorPicker
-import jackflashtech.fxmonad.SFXControl
+import fxmonad.SFXControl
 import scalafx.beans.property.Property
 import scalafx.scene.paint.Color
-import jackflashtech.fxmonad.ColorPickerProxy
+import fxmonad.ColorPickerProxy
 import scalafx.application.Platform
 import scalafx.scene.control.Tooltip
 import scalafx.concurrent.Worker.State.Succeeded

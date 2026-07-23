@@ -1,4 +1,4 @@
-package jackflashtech.fxmonad.sfx
+package fxmonad.sfx
 
 import scalafx.beans.property.BooleanProperty
 import scalafx.beans.property.IntegerProperty
@@ -9,8 +9,8 @@ import scalafx.scene.control.Tooltip
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
-import jackflashtech.fxmonad.Control
-import jackflashtech.fxmonad.SFXControl
+import fxmonad.Control
+import fxmonad.SFXControl
 
 abstract class CheckBoxControl[COut](override val defaultProperty: Property[COut, ?], control: CheckBox)(using inConversion: Conversion[COut, Boolean], outConversion: Conversion[Boolean, COut]) extends SFXControl[COut, Boolean, CheckBox](control)(using inConversion, outConversion) {
     override protected[fxmonad] def showError(errorMsg: String): Unit = control.tooltip() = Tooltip(errorMsg)

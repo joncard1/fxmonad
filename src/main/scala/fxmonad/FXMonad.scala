@@ -1,4 +1,4 @@
-package jackflashtech.fxmonad
+package fxmonad
 
 import scala.annotation.MacroAnnotation
 import scala.quoted.*
@@ -8,24 +8,16 @@ import scalafx.scene.control.TextField
 import scala.compiletime.uninitialized
 import scala.reflect.ClassTag
 import scalafx.scene.control.CheckBox
-import jackflashtech.fxmonad._
-import jackflashtech.fxmonad.sfx.{
-  CheckBoxControlBoolean,
-  CheckBoxControlInt,
-  CheckBoxControlString
-}
-import jackflashtech.fxmonad.sfx.{TextFieldControlInt, TextFieldControlString}
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
-import jackflashtech.fxmonad.sfx.SliderControlInt
-import jackflashtech.fxmonad.sfx.SliderControlDouble
+import fxmonad.sfx._
 import scalafx.beans.property.StringProperty
 import scalafx.beans.property.IntegerProperty
 import scalafx.beans.property.BooleanProperty
 import scalafx.beans.property.DoubleProperty
 
 object FXMonad {
-  import jackflashtech.fxmonad.Control.given
+  import fxmonad.Control.given
 
   val lookups: AtomicReference[Map[Class[?], List[
     PartialFunction[javafx.scene.control.Control, Control[?]]

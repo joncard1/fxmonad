@@ -1,13 +1,10 @@
-package jackflashtech.fxmonad.sfx
+package fxmonad.sfx
 
 import scala.util.Using.Releasable
 import scalafx.beans.value.ObservableValue
 import scalafx.scene.control.TextField
 import scalafx.scene.control.CheckBox
-import jackflashtech.fxmonad.{Control, ControlContainer, SFXControl}
-import jackflashtech.fxmonad.TextFieldProxy
-import jackflashtech.fxmonad.CheckBoxProxy
-import jackflashtech.fxmonad.SFXProxy
+import fxmonad._
 
 // TODO: This class seems more aware of ScalaFX than I'd like. It's possible that the current implementation of Control#update(...) should be pushed down to SFXControl, and some other method would be used to bind controls that are not ScalaFX-based to other Control types.
 // TODO: Right now, this would be complicated as Control#defaultProperty is a ScalaFX property bean, but that may not be a problem, as other systems could use that property type. But it might use another mechanism than ControlBinder which would not need to know about SFXProxy, etc.

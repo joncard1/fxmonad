@@ -1,4 +1,4 @@
-package jackflashtech.fxmonad
+package fxmonad
 
 import scalafx.scene.{control => sfxc}
 import javafx.event.EventDispatchChain
