@@ -31,3 +31,6 @@ metals.sbt
 .idea_modules
 /.worksheet/
 .scalafmt.conf
+
+# Claude
+CLAUDE.local.md
