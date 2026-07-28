@@ -57,9 +57,3 @@ class CheckBoxControl[COut](override val defaultProperty: Property[COut, ?], con
 
     updateProperty(control.selected())
 }
-
-/*
-class CheckBoxControlBoolean(control: CheckBox)(using inConversion: Conversion[Boolean, Boolean], outConversion: Conversion[Boolean, Boolean]) extends CheckBoxControl[Boolean](BooleanProperty(false), control)(using inConversion, outConversion)
-class CheckBoxControlInt(control: CheckBox)(using inConversion: Conversion[Int, Boolean], outConversion: Conversion[Boolean, Int]) extends CheckBoxControl[Int](new IntegerProperty(), control)(using inConversion, outConversion)
-class CheckBoxControlString(control: CheckBox)(using inConversion: Conversion[String, Boolean], outConversion: Conversion[Boolean, String]) extends CheckBoxControl[String](new StringProperty(), control)(using inConversion, outConversion)
-*/

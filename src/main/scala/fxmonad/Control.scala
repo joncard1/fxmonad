@@ -29,7 +29,7 @@ object PropertyConstructor {
 }
 
 @java.lang.FunctionalInterface
-abstract class PropertyConstructor[A]:
+abstract class PropertyConstructor[A] extends Function0[Property[A, ?]]:
     def apply(): Property[A, ?]
 
 object Conversion {

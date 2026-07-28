@@ -51,17 +51,3 @@ class LabelControl[COut](override val defaultProperty: Property[COut, ?], contro
     }
   })
 }
-
-/*
-class LabelControlString(control: Label = new LabelProxy())(using inConversion: Conversion[String, String], outConversion: Conversion[String, String]) extends LabelControl[String](new StringProperty(), control)(using inConversion, outConversion) {
-  def this(initialValue: String)(using inConversion: Conversion[String, String], outConversion: Conversion[String, String]) = {
-    this()(using inConversion, outConversion)
-    this.defaultProperty() = initialValue
-  }
-
-  def this(initialValue: String, control: Label)(using inConversion: Conversion[String, String], outConversion: Conversion[String, String]) = {
-    this(control)(using inConversion, outConversion)
-    this.defaultProperty() = initialValue
-  }
-}
-*/

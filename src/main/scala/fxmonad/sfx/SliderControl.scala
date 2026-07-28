@@ -68,28 +68,3 @@ class SliderControl[COut](override val defaultProperty: Property[COut, ?], contr
 
     updateProperty(control.value())
 }
-
-/*
-class SliderControlInt(control: Slider = new SliderProxy())(using inConversion: Conversion[Int, Double], outConversion: Conversion[Double, Int]) extends SliderControl[Int](new IntegerProperty(), control)(using inConversion, outConversion) {
-    def this(initialValue: Int)(using inConversion: Conversion[Int, Double], outConversion: Conversion[Double, Int]) = {
-        this()
-        this.defaultProperty() = initialValue
-    }
-
-    def this(initialValue: Int, control: Slider)(using inConversion: Conversion[Int, Double], outConversion: Conversion[Double, Int]) = {
-        this(control)
-        this.defaultProperty() = initialValue
-    }
-}
-class SliderControlDouble(control: Slider = new SliderProxy())(using inConversion: Conversion[Double, Double], outConversion: Conversion[Double, Double]) extends SliderControl[Double](new DoubleProperty(), control)(using inConversion, outConversion) {
-    def this(initialValue: Double)(using inConversion: Conversion[Double, Double], outConversion: Conversion[Double, Double]) = {
-        this()(using inConversion, outConversion)
-        this.defaultProperty() = initialValue
-    }
-
-    def this(initialValue: Double, control: Slider)(using inConversion: Conversion[Double, Double], outConversion: Conversion[Double, Double]) = {
-        this(control)(using inConversion, outConversion)
-        this.defaultProperty() = initialValue
-    }
-}
-*/
