@@ -123,3 +123,9 @@ and this would want to work for ComboBox, ComobList, but also Table without havi
 This list should actually be expanded to include each control specifically so they can be checked off. I'm just not entirely sure what the list should include. It's probably not worth including some things, like GridPane. If you need control of GridPane, you aren't interested entirely in the monadic form. Should that encourage you away from this library? Would it be prohibitive to mix usage together, make your business logic easier but still enabling you to access the UI controls? It would be nice if there's value to this even when you don't give up accessing JavaFX directly; I'm not sure it's entirely about hiding JavaFX from the developer, only making dealing with it optional and being able to invisibly mix-in other controls systems (like wearables) possible.
 
 [ ] Moving off ROADMAP.md to a better maintained Issues list in GitHub.com
+
+## Project Overhead
+
+[ ] Add code coverage reporting
+
+[ ] Add/configure linter. I added scalafmt and scalafix and ran "scalafix/RemoveUnused", but there's probably more to be done.

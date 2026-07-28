@@ -3,14 +3,8 @@ package fxmonad.sfx
 import scalafx.beans.property.Property
 import scalafx.scene.control.Slider
 import fxmonad.sfx.SFXControl
-import scalafx.concurrent.Worker.State.Succeeded
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
-import scalafx.beans.property.IntegerProperty
 import scalafx.application.Platform
 import scalafx.scene.control.Tooltip
-import scalafx.beans.property.DoubleProperty
 import fxmonad.PropertyConstructor
 import fxmonad.Conversion
 

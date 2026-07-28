@@ -1,18 +1,9 @@
 package fxmonad
 
-import cats.Monad
-import scalafx.scene.control.TextField
-import scalafx.scene.control.CheckBox
 import scalafx.beans.property.Property
-import scala.util.Using.Releasable
-import scalafx.beans.value.ObservableValue
 import scalafx.beans.property.IntegerProperty
 import scalafx.beans.property.StringProperty
-import scalafx.scene.control.Tooltip
-import scala.reflect.ClassTag
 import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
 import scalafx.beans.property.BooleanProperty
 import fxmonad.sfx._
 import javafx.scene.layout.Pane

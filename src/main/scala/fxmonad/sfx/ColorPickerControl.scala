@@ -6,7 +6,6 @@ import scalafx.beans.property.Property
 import scalafx.scene.paint.Color
 import scalafx.application.Platform
 import scalafx.scene.control.Tooltip
-import scalafx.concurrent.Worker.State.Succeeded
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure

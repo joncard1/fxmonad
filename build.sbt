@@ -10,6 +10,8 @@ lazy val root = project
 
     scalaVersion := scala3Version,
 
+    semanticdbEnabled := true,
+
     libraryDependencies += "org.scalafx" %% "scalafx" % jfxVersion,
     libraryDependencies += "org.typelevel" %% "cats-core" % "2.13.0",
     libraryDependencies += scalaOrganization.value %% "scala3-compiler" % scalaVersion.value,
@@ -18,7 +20,7 @@ lazy val root = project
     libraryDependencies += "org.testfx" % "openjfx-monocle" % "21.0.2" % Test
   )
 
-scalacOptions += "-Yretain-trees"
+scalacOptions ++= Seq("-Yretain-trees", "-Wall")
 
 Test / fork := true
 Test / javaOptions ++= Seq("-Dtestfx.headless=true", "-Dprism.order=sw", "-Dprism.text=t2k")

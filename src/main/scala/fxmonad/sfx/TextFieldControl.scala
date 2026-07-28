@@ -2,12 +2,7 @@ package fxmonad.sfx
 
 import scalafx.beans.property.Property
 import scalafx.scene.control.TextField
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
 import scalafx.scene.control.Tooltip
-import scalafx.beans.property.IntegerProperty
-import scalafx.beans.property.StringProperty
 import scalafx.application.Platform
 import fxmonad.sfx.SFXControl
 import fxmonad.Conversion

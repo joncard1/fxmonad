@@ -1,13 +1,7 @@
 package fxmonad.sfx
 
 import scalafx.scene.{control => sfxc}
-import javafx.event.EventDispatchChain
-import javafx.geometry.Point2D
-import javafx.scene.AccessibleAction
-import javafx.scene.Node
-import javafx.collections.ObservableList
 import scalafx.beans.property.DoubleProperty
-import scalafx.beans.value.ObservableValue
 import scalafx.beans.property.StringProperty
 import sfxc.TextField
 import scalafx.collections.ObservableBuffer.Add

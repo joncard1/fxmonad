@@ -3,10 +3,7 @@ package fxmonad
 import scala.annotation.MacroAnnotation
 import scala.quoted.*
 import scala.annotation.experimental
-import javafx.fxml.FXML
 import scalafx.scene.control.TextField
-import scala.compiletime.uninitialized
-import scala.reflect.ClassTag
 import scalafx.scene.control.CheckBox
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
@@ -15,7 +12,6 @@ import scalafx.beans.property.StringProperty
 import scalafx.beans.property.IntegerProperty
 import scalafx.beans.property.BooleanProperty
 import scalafx.beans.property.DoubleProperty
-import fxmonad.Conversion
 
 object FXMonad {
   import fxmonad.Control.given
@@ -129,7 +125,7 @@ class FXMonad(id: String) extends MacroAnnotation {
         symb
 
     definition match {
-      case ValDef(name, tt, term) =>
+      case ValDef(name, tt, _) =>
         if (name.equals(id)) then
           report.errorAndAbort(
             s"The name of the control, ${name}, should not be the same as the fx:id provided to the annotation."
@@ -169,7 +165,7 @@ class FXMonad(id: String) extends MacroAnnotation {
             report.errorAndAbort(
               "The Control type should have 2 type arguments"
             )
-          case controlType :: tail =>
+          case controlType :: _ =>
             val controlTypeTree = TypeTree.of(using controlType.asType)
             Symbol
               .requiredPackage("scala.Predef")
@@ -178,7 +174,7 @@ class FXMonad(id: String) extends MacroAnnotation {
                 report.errorAndAbort(
                   "Something has gone very wrong if I can't find scala.Predef.classOf"
                 )
-              case classOfSymbol :: tail =>
+              case classOfSymbol :: _ =>
                 val classOfTerm =
                   TypeApply(Ref(classOfSymbol), List(controlTypeTree))
                 ValDef(

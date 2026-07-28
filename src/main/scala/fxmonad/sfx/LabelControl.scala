@@ -3,11 +3,6 @@ package fxmonad.sfx
 import scalafx.scene.control.Label
 import fxmonad.sfx.SFXControl
 import scalafx.beans.property.Property
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
-import scalafx.application.Platform
-import scalafx.beans.property.StringProperty
 import fxmonad.PropertyConstructor
 import fxmonad.Conversion
 

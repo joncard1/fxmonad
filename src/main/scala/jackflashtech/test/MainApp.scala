@@ -2,7 +2,7 @@ package jackflashtech.test
 
 import scalafx.application.JFXApp3
 import javafx.fxml.FXMLLoader
-import javafx.{fxml => jfxf, scene => jfxs}
+import javafx.{scene => jfxs}
 import scalafx.scene.Scene
 import scalafx.Includes._
 import scala.annotation.experimental
@@ -27,7 +27,7 @@ object MainApp extends JFXApp3 {
       println(viewClass.toString())
       val loader = new FXMLLoader(viewClass)
       val root: jfxs.Parent = loader.load()
-      val controller = loader.getController[Controller]()
+      loader.getController[Controller]()
       scene = new Scene(root) {
         stylesheets = List(getClass.getResource("styles.css").toExternalForm)
 

@@ -1,7 +1,6 @@
 package fxmonad.sfx
 
 import scala.util.Using.Releasable
-import scalafx.beans.value.ObservableValue
 import scalafx.scene.control.TextField
 import scalafx.scene.control.CheckBox
 import fxmonad._
