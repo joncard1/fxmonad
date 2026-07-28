@@ -18,29 +18,56 @@ import fxmonad.sfx._
 import javafx.scene.layout.Pane
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
+import fxmonad.Conversion.castConversion
+import scalafx.beans.property.DoubleProperty
+
+object PropertyConstructor {
+    given PropertyConstructor[String] = () => new StringProperty()
+    given PropertyConstructor[Int] = () => new IntegerProperty()
+    given PropertyConstructor[Boolean] = () => new BooleanProperty()
+    given PropertyConstructor[Double] = () => new DoubleProperty()
+}
+
+@java.lang.FunctionalInterface
+abstract class PropertyConstructor[A]:
+    def apply(): Property[A, ?]
+
+object Conversion {
+    implicit def castConversion[A, B](c: scala.Conversion[A, B]): fxmonad.Conversion[A, B] = (input: A) => {
+        Try(c(input)).toEither match {
+            case Left(e) => Left(e.getMessage())
+            case Right(value) => Right(value)
+        }
+    }
+}
+
+@java.lang.FunctionalInterface
+abstract class Conversion[-T, +U] extends Function1[T, Either[String, U]]:
+    self =>
+        def apply(x: T): Either[String, U]
 
 object Control {
     // TODO: I wonder if I'd prefer to define my own type of thing like Conversion but which was MyConversion[A, B] = (A) => Try[B] or (A) => Either[String, B] so I could define the error message in the converter instead of the control.
 
-    private def selfConversion[A]() : Conversion[A, A] = (x: A) => x
+    private def selfConversion[A]() : Conversion[A, A] = (x: A) => Right(x)
     given Conversion[Boolean, Boolean] = selfConversion()
     given Conversion[String, String] = selfConversion()
     given Conversion[Double, Double] = selfConversion()
-    given Conversion[String, Int] = (x: String) => x.toInt
-    given Conversion[Int, String] = (x: Int) => x.toString()
-    given Conversion[Int, Double] = (x: Int) => x.toDouble
-    given Conversion[Double, Int] = (x: Double) => x.toInt
-    given Conversion[String, Boolean] = (x: String) => x match {
+    given Conversion[String, Int] = ((x: String) => x.toInt): scala.Conversion[String, Int]
+    given Conversion[Int, String] = ((x: Int) => x.toString()): scala.Conversion[Int, String]
+    given Conversion[Int, Double] = ((x: Int) => x.toDouble): scala.Conversion[Int, Double]
+    given Conversion[Double, Int] = ((x: Double) => x.toInt): scala.Conversion[Double, Int]
+    given Conversion[String, Boolean] = ((x: String) => x match {
         case "true" => true
         case _ => false
-    }
-    given Conversion[Int, Boolean] = (x: Int) => x match {
+    }): scala.Conversion[String, Boolean]
+    given Conversion[Int, Boolean] = ((x: Int) => x match {
         case 0 => false
         case _ => true
-    }
-    given Conversion[Boolean, Int] = (x: Boolean) => if (x) then 1 else 0
+    }): scala.Conversion[Int, Boolean]
+    given Conversion[Boolean, Int] = ((x: Boolean) => if (x) then 1 else 0): scala.Conversion[Boolean, Int]
 
-    given Conversion[Boolean, String] = (x: Boolean) => x.toString()
+    given Conversion[Boolean, String] = ((x: Boolean) => x.toString()): scala.Conversion[Boolean, String]
 
 }
 
@@ -52,14 +79,14 @@ abstract class ControlBase[COut, CIn](using inConversion: Conversion[COut, CIn],
       */
     protected def updateProperty(newVal: CIn) = {
         if (newVal != null) { // TODO: The else branch
-            Try(outConversion(newVal)) match {
-                case Success(null) =>
+            outConversion(newVal) match {
+                case Right(null) =>
                     showError("The control value was set to null")
-                case Success(nv) =>
+                case Right(nv) =>
                     clearError()
                     defaultProperty() = nv
-                case Failure(e) =>
-                    showError("There was a conversion error")
+                case Left(msg) =>
+                    showError(s"There was a conversion error: $msg")
             }
         }
     }
@@ -213,6 +240,3 @@ class ControlContainer[COut](override val defaultProperty: Property[COut, ?],  v
         }
     }
 }
-
-// TODO: This should probably be moved somewhere else.
-abstract class SFXControl[COut, CIn, InnerControl <: scalafx.scene.control.Control](val control: InnerControl)(using inConversion: Conversion[COut, CIn], outConversion: Conversion[CIn, COut]) extends ControlBase(using inConversion, outConversion)

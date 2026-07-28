@@ -1,10 +1,9 @@
 package fxmonad.sfx
 
 import scalafx.scene.control.ColorPicker
-import fxmonad.SFXControl
+import fxmonad.sfx.SFXControl
 import scalafx.beans.property.Property
 import scalafx.scene.paint.Color
-import fxmonad.ColorPickerProxy
 import scalafx.application.Platform
 import scalafx.scene.control.Tooltip
 import scalafx.concurrent.Worker.State.Succeeded

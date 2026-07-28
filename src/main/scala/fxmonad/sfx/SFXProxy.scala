@@ -1,4 +1,4 @@
-package fxmonad
+package fxmonad.sfx
 
 import scalafx.scene.{control => sfxc}
 import javafx.event.EventDispatchChain

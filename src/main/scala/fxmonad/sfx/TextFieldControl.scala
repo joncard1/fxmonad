@@ -2,7 +2,6 @@ package fxmonad.sfx
 
 import scalafx.beans.property.Property
 import scalafx.scene.control.TextField
-import fxmonad.TextFieldProxy
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
@@ -10,9 +9,36 @@ import scalafx.scene.control.Tooltip
 import scalafx.beans.property.IntegerProperty
 import scalafx.beans.property.StringProperty
 import scalafx.application.Platform
-import fxmonad.SFXControl
+import fxmonad.sfx.SFXControl
+import fxmonad.Conversion
+import fxmonad.PropertyConstructor
 
-abstract class TextFieldControl[COut](override val defaultProperty: Property[COut, ?], control: TextField = new TextFieldProxy())(using inConversion: Conversion[COut, String], outConversion: Conversion[String, COut]) extends SFXControl[COut, String, TextField](control)(using inConversion, outConversion) {
+object TextFieldControl {
+    def apply[A: PropertyConstructor]()(using inConversion: Conversion[A, String], outConversion: Conversion[String, A]): TextFieldControl[A] = {
+        val constructor = summon[PropertyConstructor[A]]
+        new TextFieldControl(constructor())
+    }
+    def apply[A: PropertyConstructor](initialValue: A)(using inConversion: Conversion[A, String], outConversion: Conversion[String, A]): TextFieldControl[A] = {
+        val constructor = summon[PropertyConstructor[A]]
+        val newC = new TextFieldControl(constructor())
+        newC() = initialValue
+        newC
+    }
+
+    def apply[A: PropertyConstructor](control: TextField)(using inConversion: Conversion[A, String], outConversion: Conversion[String, A]): TextFieldControl[A] = {
+        val constructor = summon[PropertyConstructor[A]]
+        new TextFieldControl(constructor(), control)
+    }
+
+    def apply[A: PropertyConstructor](initialValue: A, control: TextField)(using inConversion: Conversion[A, String], outConversion: Conversion[String, A]): TextFieldControl[A] = {
+        val constructor = summon[PropertyConstructor[A]]
+        val newC = new TextFieldControl(constructor(), control)
+        newC() = initialValue
+        newC
+    }
+}
+
+class TextFieldControl[COut](override val defaultProperty: Property[COut, ?], control: TextField = new TextFieldProxy())(using inConversion: Conversion[COut, String], outConversion: Conversion[String, COut]) extends SFXControl[COut, String, TextField](control)(using inConversion, outConversion) {
 
     control.text.onChange(  (_, _, newVal) => updateProperty(newVal))
 
@@ -32,20 +58,21 @@ abstract class TextFieldControl[COut](override val defaultProperty: Property[COu
 
 
     defaultProperty.onChange((_, _, newVal) => {
-        Try(inConversion(defaultProperty())) match {
-            case Success(null) =>
+        inConversion(defaultProperty()) match {
+            case Right(null) =>
                 showError("Property was set to null")
-            case Success(nv) =>
+            case Right(nv) =>
                 control.text() = nv
                 clearError()
-            case Failure(err) =>
-                showError(err.getMessage())
+            case Left(msg) =>
+                showError(msg)
         }
     })
 
     updateProperty(control.text())
 }
 
+/*
 class TextFieldControlInt(control: TextField = new TextFieldProxy())(using inConversion: Conversion[Int, String], outConversion: Conversion[String, Int]) extends TextFieldControl[Int](new IntegerProperty(), control)(using inConversion, outConversion) {
     def this(initialValue: Int)(using inConversion: Conversion[Int, String], outconversion: Conversion[String, Int]) = {
         this()
@@ -69,3 +96,4 @@ class TextFieldControlString(control: TextField = new TextFieldProxy())(using in
         this.defaultProperty() = initialValue
     }
 }
+*/

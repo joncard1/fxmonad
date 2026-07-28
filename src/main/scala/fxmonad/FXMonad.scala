@@ -15,6 +15,7 @@ import scalafx.beans.property.StringProperty
 import scalafx.beans.property.IntegerProperty
 import scalafx.beans.property.BooleanProperty
 import scalafx.beans.property.DoubleProperty
+import fxmonad.Conversion
 
 object FXMonad {
   import fxmonad.Control.given
@@ -27,40 +28,40 @@ object FXMonad {
         case c: javafx.scene.control.TextField =>
           ControlContainer(
             new StringProperty(),
-            TextFieldControlString(scalafx.scene.control.TextField(c))
+            TextFieldControl[String](scalafx.scene.control.TextField(c))
           )
         case c: javafx.scene.control.CheckBox =>
           ControlContainer(
             new StringProperty(),
-            CheckBoxControlString(scalafx.scene.control.CheckBox(c))
+            CheckBoxControl[String](scalafx.scene.control.CheckBox(c))
           )
       }),
       (classOf[Int]) -> List({
         case c: javafx.scene.control.CheckBox =>
           ControlContainer(
             new IntegerProperty(),
-            CheckBoxControlInt(scalafx.scene.control.CheckBox(c))
+            CheckBoxControl(scalafx.scene.control.CheckBox(c))
           )
         case c: javafx.scene.control.Slider =>
           ControlContainer(
             new IntegerProperty(),
-            SliderControlInt(scalafx.scene.control.Slider(c)))
+            SliderControl(scalafx.scene.control.Slider(c)))
         case c: javafx.scene.control.TextField =>
           ControlContainer(
             new IntegerProperty(),
-            TextFieldControlInt(scalafx.scene.control.TextField(c))
+            TextFieldControl(scalafx.scene.control.TextField(c))
           )
       }),
       (classOf[Boolean]) -> List({ case c: javafx.scene.control.CheckBox =>
         ControlContainer(
           new BooleanProperty(),
-          CheckBoxControlBoolean(scalafx.scene.control.CheckBox(c))
+          CheckBoxControl(scalafx.scene.control.CheckBox(c))
         )
       }),
       (classOf[Double]) -> List({ case c: javafx.scene.control.Slider =>
         ControlContainer(
           new DoubleProperty(),
-          SliderControlDouble(scalafx.scene.control.Slider(c))
+          SliderControl(scalafx.scene.control.Slider(c))
         )
       })
     )
