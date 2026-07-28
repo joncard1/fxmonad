@@ -45,12 +45,12 @@ object CheckBoxControl {
 }
 
 class CheckBoxControl[COut](
-    override val defaultProperty: Property[COut, ?],
+    defaultProperty: Property[COut, ?],
     control: CheckBox = CheckBoxProxy()
 )(using
     inConversion: Conversion[COut, Boolean],
     outConversion: Conversion[Boolean, COut]
-) extends SFXControl[COut, Boolean, CheckBox](control)(using
+) extends SFXControl[COut, Boolean, CheckBox](defaultProperty, control)(using
       inConversion,
       outConversion
     ) {

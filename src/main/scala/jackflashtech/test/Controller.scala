@@ -82,13 +82,13 @@ class Controller {
 
     textBoxC6(checkBoxC1, checkBoxC2, checkBoxC3) = {
       (shouldBeBoolean: Boolean, shouldBeInt: Int, shouldBeString: String) =>
-        TextFieldControl(
+        SimpleControl(
           s"Box1: ${shouldBeBoolean}, Box2: ${shouldBeInt}, and Box3: ${shouldBeString}"
         )
     }
 
     ageDisplay(age) = { (age: Int) =>
-      TextFieldControl(s"Age: ${age}")
+      SimpleControl(s"Age: ${age}")
     }
 
     temperatureDisplay(temperatureControl) = { (temperature: Double) =>

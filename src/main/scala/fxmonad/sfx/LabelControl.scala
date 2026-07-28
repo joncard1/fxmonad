@@ -44,12 +44,12 @@ object LabelControl {
 }
 
 class LabelControl[COut](
-    override val defaultProperty: Property[COut, ?],
+    defaultProperty: Property[COut, ?],
     control: Label = new LabelProxy()
 )(using
     inConversion: Conversion[COut, String],
     outConversion: Conversion[String, COut]
-) extends SFXControl[COut, String, Label](control)(using
+) extends SFXControl[COut, String, Label](defaultProperty, control)(using
       inConversion,
       outConversion
     ) {

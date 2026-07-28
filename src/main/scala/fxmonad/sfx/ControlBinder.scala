@@ -19,28 +19,28 @@ trait ControlBinder[A](outputControl: Control[A]) {
   protected[fxmonad] def updateValue(): Unit = {
     val newC = updateValueInner()
     def defaultUpdateBehavior() = {
-      outputControl.defaultProperty() = newC.defaultProperty()
+      outputControl() = newC()
     }
     if (
-      outputControl.isInstanceOf[ControlContainer[A]] &&
+      outputControl.isInstanceOf[ControlContainer[A, ?, ?]] &&
       outputControl
-        .asInstanceOf[ControlContainer[A]]
-        .control
+        .asInstanceOf[ControlContainer[A, ?, ?]]
+        .wrappedControl
         .isInstanceOf[SFXControl[?, ?, ?]] &&
       newC.isInstanceOf[SFXControl[?, ?, ?]] &&
       (outputControl
-        .asInstanceOf[ControlContainer[A]]
-        .control
+        .asInstanceOf[ControlContainer[A, ?, ?]]
+        .wrappedControl
         .asInstanceOf[SFXControl[?, ?, ?]]
         .getClass != newC.asInstanceOf[SFXControl[?, ?, ?]].control.getClass)
     ) {
-      outputControl.asInstanceOf[ControlContainer[A]].replaceControl(newC)
+      outputControl.asInstanceOf[ControlContainer[A, ?, ?]].replaceControl(newC)
       // TODO: This now broken because the binder is not bound to the new control
     } else if (
-      outputControl.isInstanceOf[ControlContainer[A]] &&
+      outputControl.isInstanceOf[ControlContainer[A, ?, ?]] &&
       outputControl
-        .asInstanceOf[ControlContainer[A]]
-        .control
+        .asInstanceOf[ControlContainer[A, ?, ?]]
+        .wrappedControl
         .isInstanceOf[SFXControl[A, ?, ?]] &&
       newC.isInstanceOf[SFXControl[A, ?, ?]] &&
       newC.asInstanceOf[SFXControl[A, ?, ?]].control.isInstanceOf[SFXProxy[?]]
@@ -48,8 +48,8 @@ trait ControlBinder[A](outputControl: Control[A]) {
       // TODO: I'd also like to check that the type of outputControl.control.control is the same type as newC.control#SFProxy[here]
       (
         outputControl
-          .asInstanceOf[ControlContainer[A]]
-          .control
+          .asInstanceOf[ControlContainer[A, ?, ?]]
+          .wrappedControl
           .asInstanceOf[SFXControl[?, ?, ?]]
           .control,
         newC.asInstanceOf[SFXControl[?, ?, ?]].control
@@ -72,9 +72,9 @@ trait ControlBinder[A](outputControl: Control[A]) {
 }
 
 class ControlBinder1[A, B](
-    c1: Control[A],
-    outputControl: Control[B],
-    f: (A) => Control[B]
+    c1: SFXControl[A, ?, ?],
+    outputControl: SFXControl[B, ?, ?],
+    f: A => Control[B]
 ) extends ControlBinder[B](outputControl) {
 
   override protected[fxmonad] def updateValueInner(): Control[B] = {
@@ -93,9 +93,9 @@ class ControlBinder1[A, B](
 }
 
 class ControlBinder2[A, B, C](
-    c1: Control[A],
-    c2: Control[B],
-    outputControl: Control[C],
+    c1: SFXControl[A, ?, ?],
+    c2: SFXControl[B, ?, ?],
+    outputControl: SFXControl[C, ?, ?],
     f: (A, B) => Control[C]
 ) extends ControlBinder[C](outputControl) {
   protected[fxmonad] def updateValueInner(): Control[C] = {
@@ -121,10 +121,10 @@ class ControlBinder2[A, B, C](
 }
 
 class ControlBinder3[A, B, C, D](
-    c1: Control[A],
-    c2: Control[B],
-    c3: Control[C],
-    outputControl: Control[D],
+    c1: SFXControl[A, ?, ?],
+    c2: SFXControl[B, ?, ?],
+    c3: SFXControl[C, ?, ?],
+    outputControl: SFXControl[D, ?, ?],
     f: (A, B, C) => Control[D]
 ) extends ControlBinder[D](outputControl) {
   protected[fxmonad] def updateValueInner(): Control[D] = {

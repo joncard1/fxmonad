@@ -46,12 +46,12 @@ object SliderControl {
 }
 
 class SliderControl[COut](
-    override val defaultProperty: Property[COut, ?],
+    defaultProperty: Property[COut, ?],
     control: Slider = new SliderProxy()
 )(using
     inConversion: Conversion[COut, Double],
     outConversion: Conversion[Double, COut]
-) extends SFXControl[COut, Double, Slider](control)(using
+) extends SFXControl[COut, Double, Slider](defaultProperty, control)(using
       inConversion,
       outConversion
     ) {

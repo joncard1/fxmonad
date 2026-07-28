@@ -20,7 +20,8 @@ lazy val root = project
     libraryDependencies += "org.testfx" % "openjfx-monocle" % "21.0.2" % Test
   )
 
-scalacOptions ++= Seq("-Yretain-trees", "-Wall")
+scalacOptions += "-Yretain-trees"
 
 Test / fork := true
 Test / javaOptions ++= Seq("-Dtestfx.headless=true", "-Dprism.order=sw", "-Dprism.text=t2k")
+Test / scalacOptions += "-Wall"

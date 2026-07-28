@@ -46,12 +46,12 @@ object TextFieldControl {
 }
 
 class TextFieldControl[COut](
-    override val defaultProperty: Property[COut, ?],
+    defaultProperty: Property[COut, ?],
     control: TextField = new TextFieldProxy()
 )(using
     inConversion: Conversion[COut, String],
     outConversion: Conversion[String, COut]
-) extends SFXControl[COut, String, TextField](control)(using
+) extends SFXControl[COut, String, TextField](defaultProperty, control)(using
       inConversion,
       outConversion
     ) {

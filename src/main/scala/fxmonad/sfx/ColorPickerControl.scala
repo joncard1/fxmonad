@@ -16,12 +16,12 @@ object ColorPickerControl {
 }
 
 abstract class ColorPickerControl[COut](
-    override val defaultProperty: Property[COut, ?],
+    defaultProperty: Property[COut, ?],
     control: ColorPicker = new ColorPickerProxy()
 )(using
     inConversion: Conversion[COut, Color],
     outConversion: Conversion[Color, COut]
-) extends SFXControl[COut, Color, ColorPicker](control)(using
+) extends SFXControl[COut, Color, ColorPicker](defaultProperty, control)(using
       inConversion,
       outConversion
     ) {
