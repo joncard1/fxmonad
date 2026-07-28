@@ -3,6 +3,7 @@ package fxmonad
 import scalafx.application.JFXApp3
 import scalafx.application.Platform
 import java.util.concurrent.CountDownLatch
+import fxmonad.sfx.TextFieldProxy
 
 // TODO: I'd prefer to switch to scalatest
 class TextFieldControlProxySpec extends munit.FunSuite {
