@@ -23,7 +23,7 @@ class Controller {
 
   @FXMonad("ageOutput")
   lazy val ageDisplay: Control[String] = ???
-  
+
   @FXMonad("temperatureSlider")
   lazy val temperatureControl: Control[Double] = ???
 
@@ -64,13 +64,15 @@ class Controller {
 
     textBoxC3(textBoxC, textBoxC2) = {
       (shouldBeInt: Int, shouldBeString: String) =>
-        val newC = TextFieldControl(s"${shouldBeInt.toString()} and ${shouldBeString}")
+        val newC = TextFieldControl(
+          s"${shouldBeInt.toString()} and ${shouldBeString}"
+        )
         if (shouldBeInt > 10) {
           newC.control.styleClass.add("emphasis")
         } else { // TODO: This doesn't work right when removing a style, because the new control doesn't have the style, so the remove action is by index and reports removing at index -1, but the control to update does have the class and it doesn't get removed. It would be nice if the new control was initialized with the new control. Maybe this function should take a (using control) and any new control automatically wraps the old control? Except I want it to be able to change the control.
           newC.control.styleClass.removeAll("emphasis")
         }
-          
+
         newC
     }
 
@@ -80,25 +82,30 @@ class Controller {
 
     textBoxC6(checkBoxC1, checkBoxC2, checkBoxC3) = {
       (shouldBeBoolean: Boolean, shouldBeInt: Int, shouldBeString: String) =>
-        TextFieldControl(s"Box1: ${shouldBeBoolean}, Box2: ${shouldBeInt}, and Box3: ${shouldBeString}")
+        TextFieldControl(
+          s"Box1: ${shouldBeBoolean}, Box2: ${shouldBeInt}, and Box3: ${shouldBeString}"
+        )
     }
 
-    ageDisplay(age) = {
-      (age: Int) =>
-        TextFieldControl(s"Age: ${age}")
+    ageDisplay(age) = { (age: Int) =>
+      TextFieldControl(s"Age: ${age}")
     }
 
-    temperatureDisplay(temperatureControl) = {
-      (temperature: Double) =>
-        if(temperature > 15.0) {
-          LabelControl(s"Temperature: ${temperature}", new scalafx.scene.control.Label())
-        } else {
-          TextFieldControl(s"Temperature: ${temperature}", new scalafx.scene.control.TextField())
-        }
+    temperatureDisplay(temperatureControl) = { (temperature: Double) =>
+      if (temperature > 15.0) {
+        LabelControl(
+          s"Temperature: ${temperature}",
+          new scalafx.scene.control.Label()
+        )
+      } else {
+        TextFieldControl(
+          s"Temperature: ${temperature}",
+          new scalafx.scene.control.TextField()
+        )
+      }
     }
-    colorOut(color) = {
-      (color: Color) =>
-        TextFieldControl(color.toString)
+    colorOut(color) = { (color: Color) =>
+      TextFieldControl(color.toString)
     }
   }
 }

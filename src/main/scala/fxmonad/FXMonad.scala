@@ -45,7 +45,8 @@ object FXMonad {
         case c: javafx.scene.control.Slider =>
           ControlContainer(
             new IntegerProperty(),
-            SliderControl(scalafx.scene.control.Slider(c)))
+            SliderControl(scalafx.scene.control.Slider(c))
+          )
         case c: javafx.scene.control.TextField =>
           ControlContainer(
             new IntegerProperty(),

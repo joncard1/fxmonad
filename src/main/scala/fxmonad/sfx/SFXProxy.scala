@@ -65,8 +65,8 @@ sealed trait SFXProxy[A <: sfxc.Control] { this: A =>
   protected[fxmonad] var changes: List[Change] = List()
 
   // TODO: This is a bad error message. It's ok for devs using the library, not for showing users of the dev's project.
-  /**
-    * A helper method for methods that should not be called from the FXMonad system.
+  /** A helper method for methods that should not be called from the FXMonad
+    * system.
     *
     * @return
     */
@@ -118,8 +118,7 @@ sealed trait SFXProxy[A <: sfxc.Control] { this: A =>
       .toList ::: changes
   })
 
-  /**
-    * Calling this is not supported from the FXMonad system.
+  /** Calling this is not supported from the FXMonad system.
     *
     * @param tail
     * @return
@@ -127,8 +126,8 @@ sealed trait SFXProxy[A <: sfxc.Control] { this: A =>
   override def buildEventDispatchChain(
       tail: scalafx.event.EventDispatchChain
   ): scalafx.event.EventDispatchChain = throwError
-  /**
-    * Calling this is not supported from the FXMonad system.
+
+  /** Calling this is not supported from the FXMonad system.
     */
   override def autosize(): Unit = throwError
   // TODO: This is too boring and I'm moving on to stuff I want to do.
@@ -168,17 +167,19 @@ class CheckBoxProxy extends CheckBox with SFXProxy[CheckBox] {
 }
 
 class SliderProxy extends Slider with SFXProxy[Slider] {
-    value.onChange((prop, oldVal, newVal) => {
-      changes = Change("value", oldVal, newVal) :: changes
-    })
+  value.onChange((prop, oldVal, newVal) => {
+    changes = Change("value", oldVal, newVal) :: changes
+  })
 
-    override protected def applyChangesPF(control: sfxc.Slider): PartialFunction[Change, Unit] = {
-      val localChange: PartialFunction[Change, Unit] = {
-        case c @ Change("value", _, _) => 
-          control.value() = c.newVal.asInstanceOf[Double]
-      }
-      localChange.orElse(super.applyChangesPF(control))
+  override protected def applyChangesPF(
+      control: sfxc.Slider
+  ): PartialFunction[Change, Unit] = {
+    val localChange: PartialFunction[Change, Unit] = {
+      case c @ Change("value", _, _) =>
+        control.value() = c.newVal.asInstanceOf[Double]
     }
+    localChange.orElse(super.applyChangesPF(control))
+  }
 }
 
 class LabelProxy extends Label with SFXProxy[Label] {
@@ -186,7 +187,9 @@ class LabelProxy extends Label with SFXProxy[Label] {
     changes = Change("text", oldVal, newVal) :: changes
   })
 
-  override protected def applyChangesPF(control: sfxc.Label): PartialFunction[Change, Unit] = {
+  override protected def applyChangesPF(
+      control: sfxc.Label
+  ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("text", _, _) =>
         control.text() = c.newVal.asInstanceOf[String]
@@ -200,7 +203,9 @@ class ColorPickerProxy extends sfxc.ColorPicker with SFXProxy[ColorPicker] {
     changes = Change("value", oldVal, newVal) :: changes
   })
 
-  override protected def applyChangesPF(control: ColorPicker): PartialFunction[Change, Unit] = {
+  override protected def applyChangesPF(
+      control: ColorPicker
+  ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("value", _, _) =>
         control.value() = c.newVal.asInstanceOf[Color]

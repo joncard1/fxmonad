@@ -18,7 +18,8 @@ object MainApp extends JFXApp3 {
   override def start(): Unit = {
     FXMonad.lookups.getAndUpdate(lookups => {
       lookups + (classOf[Color] -> ({
-        case c: javafx.scene.control.ColorPicker => ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
+        case c: javafx.scene.control.ColorPicker =>
+          ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
       } :: lookups.getOrElse(classOf[Color], List())))
     })
     stage = new JFXApp3.PrimaryStage {

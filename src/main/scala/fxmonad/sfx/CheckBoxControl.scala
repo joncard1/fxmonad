@@ -15,45 +15,67 @@ import fxmonad.PropertyConstructor
 import fxmonad.Conversion
 
 object CheckBoxControl {
-    def apply[A: PropertyConstructor]()(using inConversion: Conversion[A, Boolean], outConversion: Conversion[Boolean, A]): CheckBoxControl[A] = {
-        val constructor = summon[PropertyConstructor[A]]
-        new CheckBoxControl(constructor())
-    }
-    def apply[A: PropertyConstructor](initialValue: A)(using inConversion: Conversion[A, Boolean], outConversion: Conversion[Boolean, A]) = {
-        val constructor = summon[PropertyConstructor[A]]
-        val newC = new CheckBoxControl(constructor())
-        newC() = initialValue
-        newC
-    }
+  def apply[A: PropertyConstructor]()(using
+      inConversion: Conversion[A, Boolean],
+      outConversion: Conversion[Boolean, A]
+  ): CheckBoxControl[A] = {
+    val constructor = summon[PropertyConstructor[A]]
+    new CheckBoxControl(constructor())
+  }
+  def apply[A: PropertyConstructor](initialValue: A)(using
+      inConversion: Conversion[A, Boolean],
+      outConversion: Conversion[Boolean, A]
+  ) = {
+    val constructor = summon[PropertyConstructor[A]]
+    val newC = new CheckBoxControl(constructor())
+    newC() = initialValue
+    newC
+  }
 
-    def apply[A: PropertyConstructor](control: CheckBox)(using inConversion: Conversion[A, Boolean], outConversion: Conversion[Boolean, A]): CheckBoxControl[A] = {
-        val constructor = summon[PropertyConstructor[A]]
-        new CheckBoxControl(constructor(), control)
-    }
+  def apply[A: PropertyConstructor](control: CheckBox)(using
+      inConversion: Conversion[A, Boolean],
+      outConversion: Conversion[Boolean, A]
+  ): CheckBoxControl[A] = {
+    val constructor = summon[PropertyConstructor[A]]
+    new CheckBoxControl(constructor(), control)
+  }
 
-    def apply[A: PropertyConstructor](initialValue: A, control: CheckBox)(using inConversion: Conversion[A, Boolean], outConversion: Conversion[Boolean, A]) = {
-        val constructor = summon[PropertyConstructor[A]]
-        val newC = new CheckBoxControl(constructor(), control)
-        newC() = initialValue
-        newC
-    }
+  def apply[A: PropertyConstructor](initialValue: A, control: CheckBox)(using
+      inConversion: Conversion[A, Boolean],
+      outConversion: Conversion[Boolean, A]
+  ) = {
+    val constructor = summon[PropertyConstructor[A]]
+    val newC = new CheckBoxControl(constructor(), control)
+    newC() = initialValue
+    newC
+  }
 }
 
-class CheckBoxControl[COut](override val defaultProperty: Property[COut, ?], control: CheckBox = CheckBoxProxy())(using inConversion: Conversion[COut, Boolean], outConversion: Conversion[Boolean, COut]) extends SFXControl[COut, Boolean, CheckBox](control)(using inConversion, outConversion) {
-    override protected[fxmonad] def showError(errorMsg: String): Unit = control.tooltip() = Tooltip(errorMsg)
-    override protected[fxmonad] def clearError(): Unit = control.tooltip() = null
+class CheckBoxControl[COut](
+    override val defaultProperty: Property[COut, ?],
+    control: CheckBox = CheckBoxProxy()
+)(using
+    inConversion: Conversion[COut, Boolean],
+    outConversion: Conversion[Boolean, COut]
+) extends SFXControl[COut, Boolean, CheckBox](control)(using
+      inConversion,
+      outConversion
+    ) {
+  override protected[fxmonad] def showError(errorMsg: String): Unit =
+    control.tooltip() = Tooltip(errorMsg)
+  override protected[fxmonad] def clearError(): Unit = control.tooltip() = null
 
-    control.selected.onChange(  (_, _, newVal) => updateProperty(newVal))
+  control.selected.onChange((_, _, newVal) => updateProperty(newVal))
 
-    defaultProperty.onChange((_, _, newVal) => {
-        inConversion(defaultProperty()) match {
-            case Right(nv) =>
-                control.selected() = nv
-                clearError()
-            case Left(msg) =>
-                showError(msg)
-        }
-    })
+  defaultProperty.onChange((_, _, newVal) => {
+    inConversion(defaultProperty()) match {
+      case Right(nv) =>
+        control.selected() = nv
+        clearError()
+      case Left(msg) =>
+        showError(msg)
+    }
+  })
 
-    updateProperty(control.selected())
+  updateProperty(control.selected())
 }
