@@ -4,12 +4,17 @@ import scalafx.application.JFXApp3
 import scalafx.application.Platform
 import java.util.concurrent.CountDownLatch
 import fxmonad.sfx.TextFieldProxy
+import org.testfx.api.FxToolkit
 
 // TODO: I'd prefer to switch to scalatest
 class TextFieldControlProxySpec extends munit.FunSuite {
 
-  override def beforeAll(): Unit = Platform.startup(() => {})
-  override def afterAll(): Unit = Platform.exit()
+  override def beforeEach(context: BeforeEach): Unit = {
+    FxToolkit.registerPrimaryStage();
+  }
+  override def afterEach(context: AfterEach): Unit = {
+    FxToolkit.cleanupStages()
+  }
 
   test("TextFieldControlProxy should do stuff") {
     val latch = new CountDownLatch(1)
