@@ -15,6 +15,7 @@
                     <Slider fx:id="ageControl" max="5.0" min="0.0" />
                     <!-- <TextField fx:id="ageControl">0</TextField> -->
                     <TextField fx:id="ageOutput" disable="true" />
+                    <Button fx:id="resetAgeButton" text="Reset Age" />
                 </VBox>
                 <VBox>
                     <Slider fx:id="temperatureSlider" max="20.0" min="10.0" majorTickUnit="1.0" minorTickCount="4" snapToTicks="true" showTickMarks="true" blockIncrement="0.1" />
