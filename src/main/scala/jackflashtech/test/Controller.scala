@@ -6,11 +6,18 @@ import javafx.fxml.FXML
 import fxmonad.sfx._
 import scalafx.scene.paint.Color
 
+/** Non-data event messages emitted by this controller's controls. */
+sealed trait Msg
+case object ResetAgeClicked extends Msg
+
 /** A controller that uses the fxmonad system in conjunction with the
   * ScalaFX/JavaFX system. This is used for testing use cases of the tools.
   */
 @experimental
-class Controller {
+class Controller extends ReceivesEvents[Msg] {
+
+  @FXEmitter("resetAgeButton")
+  lazy val resetAgeEmitter: Emitter[Msg] = ???
 
   @FXMonad("colorControl")
   lazy val color: Control[Color] = ???
@@ -106,6 +113,17 @@ class Controller {
     }
     colorOut(color) = { (color: Color) =>
       TextFieldControl(color.toString)
+    }
+
+    // Non-data event wiring: the button emits a message, the controller
+    // handles it. Handler bodies run on the FX thread (see
+    // SimpleEventProcessor), so mutating a control here is safe. The Using
+    // block scopes the registration phase — seal() runs as the block closes.
+    scala.util.Using.resource(eventProcessor) { ep =>
+      ep.registerHandler { case ResetAgeClicked =>
+        age() = 0
+      }
+      resetAgeEmitter.onAction(_ => ResetAgeClicked)
     }
   }
 }
