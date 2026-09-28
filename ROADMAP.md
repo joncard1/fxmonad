@@ -54,39 +54,7 @@ so Control#update[A, B](Control[A], f: (A) => Control[B]) should be matched by C
 
 ## Controls
 
-[ ] Button
-
-This is the next major paradigm adjustment, because exposing a button as Control[Int] or Control[Boolean] could imply that it's exposing the "isPressed" property. It may require something like a trait ControlPublisher or ControlEmitter with syntax like
-
-```
-val btn: ControlEmitter = ...
-val age: Control[Int] = ...
-val name: Control[String] = ...
-val output: Control[String] = ...
-
-btn.emit(age, name) = (age: Int, name: String) => {
-  output() = s"${name} is ${age} years old"
-}
-```
-
-but this usage would 1. not permit the replacement of output to another control (possibly not a problem). 2. would restrict "btn" to some default event on which to emit (possibly solvable by subclassing ButtonControlClick and ButtonControlMouseOver, but that's terrible, since it would require different instances to encapsulate the same ScalaFX control), 3. does not include information from "btn" in the function (possibly not a problem).
-
-One alternative is to provide a method for each emission, which doesn't abstract away that it's a button (calls like btn.click(...), btn.mouseOver(...)). Or make the wrapper around ObjectProperty objects like Button#onMouseClicked.
-
-The other one is simply declare this kind of event out-of-scope and just use JavaFX/ScalaFX features as-built. The reason I don't like this is one of my usecases is a wearable that is a touch-sensitive piece of jewelry and I'd like it to emit events on double-click. The adapter of the wearable into a Control[Int] (hold increases the value at a configured rate, click-and-hold causes the value to decrease at a configured rate; imagine a D&D DM surreptitiously signalling to a music-generation AI "increase spookiness of the soundtrack to 7, decrease it to 3; etc.") might then want to be able to emit a "double-click" event (imagine: "Now mix in a roll of thunder"). Adding a non-JavaFX event emission system to the controller undoes some of the purpose of this. However, it's not necessarily a problem to have something like
-
-```
-val ring: Control[Int] = ... // Initialized to the "hold" and "click-and-hold" gestures
-val rollThunder: ControlEmitter = ... // Initialized to listen to the same wearable, but the "double-click" gesture
-val output: Control[String] = ...
-
-output(ring) = (spookiness: Int) => {
-  MusicControl("Construct here a prompt that says 'Set the spookiness to ${spookiness}'")
-}
-rollThunder() = () => {
-  output() = "Construct here a prompt that says 'Mix-in a roll of thunder'"
-}
-```
+[ ] Custom controls. This is already implemented (mostly) in the branch add-pane-control, but I there are some TODOs that need to be considered.
 
 [ ] ComboBox
 
