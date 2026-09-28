@@ -1,17 +1,17 @@
 package fxmonad
 
-import scala.annotation.MacroAnnotation
-import scala.quoted.*
-import scala.annotation.experimental
-import scalafx.scene.control.TextField
-import scalafx.scene.control.CheckBox
 import java.util.concurrent.atomic.AtomicReference
+import scala.annotation.MacroAnnotation
+import scala.annotation.experimental
+import scala.quoted.*
 import scala.annotation.tailrec
 import fxmonad.sfx._
-import scalafx.beans.property.StringProperty
-import scalafx.beans.property.IntegerProperty
-import scalafx.beans.property.BooleanProperty
-import scalafx.beans.property.DoubleProperty
+import scalafx.beans.property.{
+  BooleanProperty,
+  DoubleProperty,
+  IntegerProperty,
+  StringProperty
+}
 
 object FXMonad {
   import fxmonad.Control.given
@@ -74,17 +74,14 @@ object FXMonad {
         lookupList: List[
           PartialFunction[javafx.scene.control.Control, Control[?]]
         ]
-    ): Option[Control[?]] = {
+    ): Option[Control[?]] =
       lookupList match {
         case Nil          => None
         case head :: tail =>
-          if (head.isDefinedAt(control)) {
-            Some(head(control))
-          } else {
-            lookupInternal(control, tail)
-          }
+          if (head.isDefinedAt(control)) Some(head(control))
+          else lookupInternal(control, tail)
       }
-    }
+
     lookupInternal(control, lookups.get.getOrElse(typ, List())) match {
       case None    => throw new Exception("Failed to find proper control")
       case Some(c) => c
@@ -92,15 +89,8 @@ object FXMonad {
   }
 }
 
-/** This is a macro annotation that initializes a class correctly to create a
-  * controller for JavaFX, and sets the properties up to use the FXMonad system.
-  *
-  * @param id
-  * @param controlTypeName
-  */
 @experimental
 class FXMonad(id: String) extends MacroAnnotation {
-
   override def transform(using
       quotes: Quotes
   )(
@@ -109,7 +99,6 @@ class FXMonad(id: String) extends MacroAnnotation {
   ): List[quotes.reflect.Definition] = {
     import quotes.reflect.*
 
-    // This is the bit that looks like a bad idea from https://stackoverflow.com/questions/75669835/add-annotation-to-a-method-defined-using-a-symbol-newmethod
     extension (symb: Symbol)
       def addAnnotation(annotation: Term): Symbol =
         given dotty.tools.dotc.core.Contexts.Context =
@@ -126,7 +115,7 @@ class FXMonad(id: String) extends MacroAnnotation {
 
     definition match {
       case ValDef(name, tt, _) =>
-        if (name.equals(id)) then
+        if (name.equals(id))
           report.errorAndAbort(
             s"The name of the control, ${name}, should not be the same as the fx:id provided to the annotation."
           )
@@ -148,18 +137,8 @@ class FXMonad(id: String) extends MacroAnnotation {
           .addAnnotation(
             Apply(Select(New(typeTree), annotationConstructor), List())
           )
-        // TODO: Possibly check whether the jfxControlSymbol is already defined. If it is, don't redefine it; allow the user to define the property themselves if they plan on accessing it in their code.
         val jfxControlRef = Ref(jfxControlSymbol)
-        val controls = if (false) /* TODO: if the symbol is aleady defined */ {
-          List()
-        } else {
-          val jfxControlDef =
-            ValDef(jfxControlSymbol, Some(Literal(NullConstant())))
-          List(jfxControlDef)
-        }
-
         val controlSymbol = definition.symbol
-
         val controlDef = tt.tpe.typeArgs match {
           case Nil =>
             report.errorAndAbort(
@@ -192,15 +171,19 @@ class FXMonad(id: String) extends MacroAnnotation {
                       )
                     FXMonad.lookupControl(
                       ${ classOfTerm.asExprOf[Class[?]] },
-                      ${ jfxControlRef.asExprOf[javafx.scene.control.Control] }
+                      ${
+                        jfxControlRef.asExprOf[javafx.scene.control.Control]
+                      }
                     )
                   }.asTerm)
                 )
             }
         }
-        controls ::: List(controlDef)
+        List(
+          ValDef(jfxControlSymbol, Some(Literal(NullConstant()))),
+          controlDef
+        )
       case _: Definition =>
-        // TODO: This is a bad error message
         report.errorAndAbort("Don't know what to do with this")
     }
   }
