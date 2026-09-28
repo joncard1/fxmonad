@@ -6,10 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Built with sbt (Scala 3, JVM). All commands run from the repo root.
 
-- `sbt compile` — compile the library and demo.
-- `sbt run` — launch the demo `MainApp` (`src/main/scala/jackflashtech/test/`), which loads `main-screen.fxml` and exercises the fxmonad DSL end-to-end. This is the primary way to hand-verify behavior; there is no headless UI harness.
-- `sbt test` — run the munit test suite.
-- `sbt "testOnly fxmonad.TextFieldControlProxySpec"` — run one test class.
+- `sbt compile` — compile all subprojects.
+- `sbt "testApp/run"` — launch the demo `MainApp` (`testApp/`), which loads `main-screen.fxml` and exercises the fxmonad DSL end-to-end. This is the primary way to hand-verify behavior; there is no headless UI harness.
+- `sbt test` — run the core MUnit test suite.
+- `sbt "core/testOnly fxmonad.TextFieldControlProxySpec"` — run one test class.
 - `sbt scalafmtAll` — format sources (scalafmt 3.10.7, dialect `scala3`; see `.scalafmt.conf`).
 
 Notes:
@@ -57,6 +57,6 @@ Consequence for the FXML/controller layer: the fx:id on the FXML `<Control>` ele
 
 ### Package layout
 
-- `fxmonad` — core (`Control`, `ControlContainer`, `SFXControl`, `SFXProxy` + typed proxies, `@FXMonad` macro).
-- `fxmonad.sfx` — concrete ScalaFX-backed controls and `ControlBinder{1,2,3}`.
-- `jackflashtech.test` — demo app (`MainApp`, `Controller`) plus `src/main/resources/jackflashtech/test/{main-screen.fxml, styles.css}`. Treat this as a live use-case sandbox, not library code — changes here exercise but don't define the API.
+- `core/` — core library (`Control`, `ControlContainer`, `SFXControl`, `SFXProxy` + typed proxies), ScalaFX controls, and unit tests.
+- `macros/` — `@FXMonad` and `@FXEmitter` annotations with their runtime lookup/wrapping helpers.
+- `testApp/` — `jackflashtech.test` demo (`MainApp`, `Controller`) and resources under `src/main/resources/jackflashtech/test/`. Treat this as a live use-case sandbox, not library code — changes here exercise but don't define the API.

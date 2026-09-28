@@ -1,8 +1,8 @@
 package fxmonad
 
 import scala.annotation.MacroAnnotation
-import scala.quoted.*
 import scala.annotation.experimental
+import scala.quoted.*
 import fxmonad.sfx.ButtonEmitter
 
 object FXEmitter {
@@ -23,23 +23,8 @@ object FXEmitter {
     }
 }
 
-/** Macro annotation, analogous to [[FXMonad]], for wiring an [[Emitter]] to an
-  * FXML control. `@FXEmitter("someFxId")` on a `lazy val name: Emitter[M] =
-  * ???`:
-  *   1. injects a `private @FXML var someFxId: javafx.scene.control.Control =
-  *      null` so JavaFX's FXMLLoader wires the widget, and
-  *   2. rewrites the `???` body to `FXEmitter.wrap[M](someFxId)`, evaluated
-  *      lazily on first access (after FXML has run).
-  *
-  * As with [[FXMonad]], the val name must differ from the fx:id, and the
-  * enclosing class must be `@experimental`.
-  *
-  * @param id
-  *   the fx:id of the control in the FXML.
-  */
 @experimental
 class FXEmitter(id: String) extends MacroAnnotation {
-
   override def transform(using
       quotes: Quotes
   )(
@@ -48,7 +33,6 @@ class FXEmitter(id: String) extends MacroAnnotation {
   ): List[quotes.reflect.Definition] = {
     import quotes.reflect.*
 
-    // Same symbol-annotation hack used by FXMonad.
     extension (symb: Symbol)
       def addAnnotation(annotation: Term): Symbol =
         given dotty.tools.dotc.core.Contexts.Context =
@@ -65,7 +49,7 @@ class FXEmitter(id: String) extends MacroAnnotation {
 
     definition match {
       case ValDef(name, tt, _) =>
-        if (name.equals(id)) then
+        if (name.equals(id))
           report.errorAndAbort(
             s"The name of the emitter, ${name}, should not be the same as the fx:id provided to the annotation."
           )
@@ -88,11 +72,7 @@ class FXEmitter(id: String) extends MacroAnnotation {
             Apply(Select(New(typeTree), annotationConstructor), List())
           )
         val jfxControlRef = Ref(jfxControlSymbol)
-        val jfxControlDef =
-          ValDef(jfxControlSymbol, Some(Literal(NullConstant())))
-
         val emitterSymbol = definition.symbol
-
         val emitterDef = tt.tpe.typeArgs match {
           case Nil =>
             report.errorAndAbort(
@@ -128,7 +108,10 @@ class FXEmitter(id: String) extends MacroAnnotation {
             ValDef(emitterSymbol, Some(Block(List(nullCheck), wrapCall)))
         }
 
-        List(jfxControlDef, emitterDef)
+        List(
+          ValDef(jfxControlSymbol, Some(Literal(NullConstant()))),
+          emitterDef
+        )
       case _: Definition =>
         report.errorAndAbort(
           "@FXEmitter can only annotate a val of type Emitter[M]"
