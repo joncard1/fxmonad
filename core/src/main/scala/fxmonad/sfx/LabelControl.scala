@@ -55,8 +55,8 @@ class LabelControl[COut](
     ) {
   // Not bothering to subscribe to property changes because it's a read-only control
 
-  override protected[fxmonad] def clearError(): Unit = {}
-  override protected[fxmonad] def showError(errorMsg: String): Unit = {}
+  override protected def clearDisplayedError(): Unit = {}
+  override protected def displayError(errorMsg: String): Unit = {}
 
   defaultProperty.onChange((_, _, newVal) => {
     inConversion(defaultProperty()) match {

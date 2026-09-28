@@ -34,7 +34,9 @@ lazy val testApp = project
   .dependsOn(core, macros)
   .settings(
     name := "fxmonad-test-app",
-    libraryDependencies += "org.scalafx" %% "scalafx" % jfxVersion
+    libraryDependencies += "org.scalafx" %% "scalafx" % jfxVersion,
+    libraryDependencies += "eu.timepit" %% "refined" % "0.11.3",
+    libraryDependencies += "org.hid4java" % "hid4java" % "0.8.0"
   )
 
 lazy val root = project

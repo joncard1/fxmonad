@@ -11,6 +11,14 @@ import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 import fxmonad.Conversion.castConversion
 import scalafx.beans.property.DoubleProperty
+import scalafx.scene.control.{
+  TextField,
+  CheckBox,
+  Slider,
+  Label,
+  ColorPicker,
+  RadioButton
+}
 
 object PropertyConstructor {
   given PropertyConstructor[String] = () => new StringProperty()
@@ -107,9 +115,17 @@ abstract class Control[COut] {
 
   val defaultProperty: Property[COut, ?]
 
-  protected[fxmonad] def showError(errorMsg: String): Unit
+  /** Only fxmonad-internal code (conversion/binding machinery) may trigger
+    * error display; the actual rendering is left to `displayError`, which any
+    * subclass - in any package - can implement.
+    */
+  protected[fxmonad] def showError(errorMsg: String): Unit = displayError(
+    errorMsg
+  )
+  protected[fxmonad] def clearError(): Unit = clearDisplayedError()
 
-  protected[fxmonad] def clearError(): Unit
+  protected def displayError(errorMsg: String): Unit
+  protected def clearDisplayedError(): Unit
 
   // def map[B](f: (COut) => B): Control[B, ?] = new CarrierControl(f(defaultProperty()))
   def flatMap[B](f: (x: COut) => Control[B]): Control[B] = f(defaultProperty())
@@ -223,62 +239,89 @@ class ControlContainer[COut](
     wrappedControl.clearError()
   }
 
-  // TODO: It seems both 1. a problem and 2. necessary for the internal type to change. The only impact, really, is to use a different conversion internally and to change the signature of updateProperty. Does it need to be part of the external type declaration?
-  protected[fxmonad] def replaceControl(newControl: Control[COut]) = {
-    // TODO: If the new control has a different inner type than control, replace the wrapped control in the JavaFX tree with the new control and keep the passed-in control as the new wrapped control. Which seems like it'll probably be a nightmare.
-    // TODO: This is a lot of the same logic as in ControlBinder#update, except for ControlBinder deferring to ControlContainer.
+  // displayError/clearDisplayedError are unused here: ControlContainer has no
+  // UI of its own, so it overrides showError/clearError directly to delegate
+  // to the wrapped control instead.
+  override protected def displayError(errorMsg: String): Unit = ()
+  override protected def clearDisplayedError(): Unit = ()
 
-    def defaultBehavior() = {
+  /** Reconciles the currently wrapped control against a newly-produced one
+    * (from a binding function passed to `update`), in one of a few ways:
+    *   - `newControl` has no widget of its own (e.g. it's another
+    *     `ControlContainer`, or any other non-`SFXControl`): whatever widget is
+    *     currently on screen is removed, and only the value is tracked from
+    *     then on.
+    *   - `wrappedControl` has no widget but `newControl` does: there's no way
+    *     to know where in the JavaFX tree the new widget should go. Left
+    *     unimplemented for now; the value is still tracked live.
+    *   - Both are widget-backed: if `newControl` is a proxy of the same widget
+    *     class, its recorded property changes are replayed onto the live widget
+    *     in place. If it's a proxy of a *different* widget class, there's no
+    *     way to attach a proxy node into the live scene graph either, so only
+    *     the value is tracked. Otherwise, the live widget is swapped out for
+    *     the new one in the JavaFX tree.
+    */
+  protected[fxmonad] def replaceControl(newControl: Control[COut]): Unit = {
+    def trackValueOnly(): Unit = {
       wrappedControl.defaultProperty() = newControl.defaultProperty()
     }
 
-    // TODO: This is at least the beginning of the checks that are needed.
-    // TODO: Add checks if newControl isn't Control[COut, CIn], it won't work to replace the control.
-    // TODO: Which, of course, can't be done because of type erasure
-    if (
-      (wrappedControl.isInstanceOf[SFXControl[?, ?, ?]]) &&
-      (newControl.isInstanceOf[SFXControl[COut, ?, ?]]) &&
-      (wrappedControl
-        .asInstanceOf[SFXControl[?, ?, ?]]
-        .control
-        .getClass != newControl
-        .asInstanceOf[SFXControl[COut, ?, ?]]
-        .control
-        .getClass()) &&
-      !(newControl
-        .asInstanceOf[SFXControl[?, ?, ?]]
-        .control
-        .isInstanceOf[SFXProxy[?]])
-    ) {
-      val wrappedControlSfx = wrappedControl.asInstanceOf[SFXControl[?, ?, ?]]
-      val newControlSfx = newControl.asInstanceOf[SFXControl[COut, ?, ?]]
-      val wrappedControlParent = wrappedControlSfx.control.parent()
-      if (wrappedControlParent.isInstanceOf[Pane]) {
-        val wrappedControlPane = wrappedControlParent.asInstanceOf[Pane]
-        Platform.runLater {
-          // TODO: This should replace the other control in the same index
-          val index = wrappedControlPane
-            .getChildren()
-            .indexOf(wrappedControlSfx.control.delegate)
-          if (index > -1) {
-            wrappedControlPane
-              .getChildren()
-              .remove(wrappedControlSfx.control.delegate)
-            wrappedControlPane
-              .getChildren()
-              .add(index, newControlSfx.control.delegate)
-          } else { /* TODO: This probably needs something more. */ }
-
-          // wrappedControlPane.getChildren().forEach(x => println(x.toString()))
-        }
-        // Re-subscribe (not just reassign) so future changes to the new
-        // control propagate up through defaultProperty as before.
-        setWrappedControl(newControlSfx)
-      } else {
-        defaultBehavior()
+    def removeWrappedWidgetFromParent(): Unit = {
+      wrappedControl match {
+        case sfx: SFXControl[?, ?, ?] =>
+          sfx.control.parent() match {
+            case pane: Pane =>
+              Platform.runLater {
+                pane.getChildren().remove(sfx.control.delegate)
+              }
+            case _ => ()
+          }
+        case _ => ()
       }
+    }
+
+    def swapWidget(
+        oldWidget: scalafx.scene.control.Control,
+        newSfx: SFXControl[COut, ?, ?]
+    ): Unit = {
+      oldWidget.parent() match {
+        case pane: Pane =>
+          Platform.runLater {
+            val index = pane.getChildren().indexOf(oldWidget.delegate)
+            if (index > -1) {
+              pane.getChildren().remove(oldWidget.delegate)
+              pane.getChildren().add(index, newSfx.control.delegate)
+            }
+          }
+        case _ => () // Not attached to a Pane; nothing to move in the scene.
+      }
+      setWrappedControl(newSfx)
+    }
+
+    if (!newControl.isInstanceOf[SFXControl[?, ?, ?]]) {
+      removeWrappedWidgetFromParent()
+      setWrappedControl(newControl)
+    } else if (!wrappedControl.isInstanceOf[SFXControl[?, ?, ?]]) {
+      // TODO: no widget to anchor the placement decision on; not implemented.
+      setWrappedControl(newControl)
     } else {
-      defaultBehavior()
+      val oldWidget = wrappedControl.asInstanceOf[SFXControl[?, ?, ?]].control
+      val newSfx = newControl.asInstanceOf[SFXControl[COut, ?, ?]]
+      (oldWidget, newSfx.control) match {
+        case (c1: TextField, c2: TextFieldProxy)     => c2.applyChanges(c1)
+        case (c1: CheckBox, c2: CheckBoxProxy)       => c2.applyChanges(c1)
+        case (c1: Slider, c2: SliderProxy)           => c2.applyChanges(c1)
+        case (c1: Label, c2: LabelProxy)             => c2.applyChanges(c1)
+        case (c1: ColorPicker, c2: ColorPickerProxy) => c2.applyChanges(c1)
+        case (c1: RadioButton, c2: RadioButtonProxy) => c2.applyChanges(c1)
+        case (_, proxy) if proxy.isInstanceOf[SFXProxy[?]] =>
+          // A proxy of a different widget class than the live one: can't
+          // replay (wrong shape) and can't attach a proxy node into the live
+          // scene graph either. Track the value only.
+          trackValueOnly()
+        case _ =>
+          swapWidget(oldWidget, newSfx)
+      }
     }
   }
 }

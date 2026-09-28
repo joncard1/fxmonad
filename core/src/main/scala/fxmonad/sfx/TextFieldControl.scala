@@ -58,14 +58,14 @@ class TextFieldControl[COut](
 
   control.text.onChange((_, _, newVal) => updateProperty(newVal))
 
-  override protected[fxmonad] def clearError(): Unit = {
+  override protected def clearDisplayedError(): Unit = {
     control.tooltip() = null
     Platform.runLater {
       control.styleClass.removeAll("error")
     }
   }
 
-  override protected[fxmonad] def showError(errorMsg: String): Unit = {
+  override protected def displayError(errorMsg: String): Unit = {
     control.tooltip() = Tooltip(errorMsg)
     Platform.runLater {
       control.styleClass.add("error")

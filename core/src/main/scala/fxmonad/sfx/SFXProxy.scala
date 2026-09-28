@@ -13,6 +13,7 @@ import sfxc.CheckBox
 import sfxc.Slider
 import sfxc.Label
 import sfxc.ColorPicker
+import sfxc.RadioButton
 import scalafx.scene.paint.Color
 
 case class Change(propertyName: String, oldVal: Any, newVal: Any)
@@ -151,6 +152,22 @@ class CheckBoxProxy extends CheckBox with SFXProxy[CheckBox] {
 
   override protected def applyChangesPF(
       control: sfxc.CheckBox
+  ): PartialFunction[Change, Unit] = {
+    val localChange: PartialFunction[Change, Unit] = {
+      case c @ Change("selected", _, _) =>
+        control.selected() = c.newVal.asInstanceOf[Boolean]
+    }
+    localChange.orElse(super.applyChangesPF(control))
+  }
+}
+
+class RadioButtonProxy extends RadioButton with SFXProxy[RadioButton] {
+  selected.onChange((prop, oldVal, newVal) => {
+    changes = Change("selected", oldVal, newVal) :: changes
+  })
+
+  override protected def applyChangesPF(
+      control: sfxc.RadioButton
   ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("selected", _, _) =>

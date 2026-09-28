@@ -1,56 +1,56 @@
 package fxmonad.sfx
 
-import scalafx.scene.control.CheckBox
+import scalafx.scene.control.RadioButton
 import scalafx.beans.property.Property
 import scalafx.scene.control.Tooltip
 import fxmonad.sfx.SFXControl
 import fxmonad.PropertyConstructor
 import fxmonad.Conversion
 
-object CheckBoxControl {
+object RadioButtonControl {
   def apply[A: PropertyConstructor]()(using
       inConversion: Conversion[A, Boolean],
       outConversion: Conversion[Boolean, A]
-  ): CheckBoxControl[A] = {
+  ): RadioButtonControl[A] = {
     val constructor = summon[PropertyConstructor[A]]
-    new CheckBoxControl(constructor())
+    new RadioButtonControl(constructor())
   }
   def apply[A: PropertyConstructor](initialValue: A)(using
       inConversion: Conversion[A, Boolean],
       outConversion: Conversion[Boolean, A]
   ) = {
     val constructor = summon[PropertyConstructor[A]]
-    val newC = new CheckBoxControl(constructor())
+    val newC = new RadioButtonControl(constructor())
     newC() = initialValue
     newC
   }
 
-  def apply[A: PropertyConstructor](control: CheckBox)(using
+  def apply[A: PropertyConstructor](control: RadioButton)(using
       inConversion: Conversion[A, Boolean],
       outConversion: Conversion[Boolean, A]
-  ): CheckBoxControl[A] = {
+  ): RadioButtonControl[A] = {
     val constructor = summon[PropertyConstructor[A]]
-    new CheckBoxControl(constructor(), control)
+    new RadioButtonControl(constructor(), control)
   }
 
-  def apply[A: PropertyConstructor](initialValue: A, control: CheckBox)(using
+  def apply[A: PropertyConstructor](initialValue: A, control: RadioButton)(using
       inConversion: Conversion[A, Boolean],
       outConversion: Conversion[Boolean, A]
   ) = {
     val constructor = summon[PropertyConstructor[A]]
-    val newC = new CheckBoxControl(constructor(), control)
+    val newC = new RadioButtonControl(constructor(), control)
     newC() = initialValue
     newC
   }
 }
 
-class CheckBoxControl[COut](
+class RadioButtonControl[COut](
     override val defaultProperty: Property[COut, ?],
-    control: CheckBox = CheckBoxProxy()
+    control: RadioButton = RadioButtonProxy()
 )(using
     inConversion: Conversion[COut, Boolean],
     outConversion: Conversion[Boolean, COut]
-) extends SFXControl[COut, Boolean, CheckBox](control)(using
+) extends SFXControl[COut, Boolean, RadioButton](control)(using
       inConversion,
       outConversion
     ) {

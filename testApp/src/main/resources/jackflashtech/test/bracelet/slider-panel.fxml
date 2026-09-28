@@ -1,0 +1,13 @@
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx/2.2" fx:controller="jackflashtech.test.bracelet.SliderPanelController" spacing="8.0">
+    <children>
+        <Slider fx:id="sliderControl1" min="0.0" max="100.0" orientation="VERTICAL" />
+        <Slider fx:id="sliderControl2" min="0.0" max="100.0" orientation="VERTICAL" />
+        <Slider fx:id="sliderControl3" min="0.0" max="100.0" orientation="VERTICAL" />
+        <Slider fx:id="sliderControl4" min="0.0" max="100.0" orientation="VERTICAL" />
+        <Slider fx:id="sliderControl5" min="0.0" max="100.0" orientation="VERTICAL" />
+        <Slider fx:id="sliderControl6" min="0.0" max="100.0" orientation="VERTICAL" />
+    </children>
+</HBox>

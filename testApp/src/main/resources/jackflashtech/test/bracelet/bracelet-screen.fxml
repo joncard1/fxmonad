@@ -1,0 +1,27 @@
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx/2.2" fx:controller="jackflashtech.test.bracelet.BraceletController" spacing="16.0">
+    <fx:define>
+        <ToggleGroup fx:id="modeGroup" />
+    </fx:define>
+    <children>
+        <VBox spacing="8.0">
+            <children>
+                <RadioButton fx:id="braceletRadio" text="Bracelet" toggleGroup="$modeGroup" selected="true" />
+                <RadioButton fx:id="onScreenRadio" text="On screen" toggleGroup="$modeGroup" />
+                <TextField fx:id="displayControl1" disable="true" />
+                <TextField fx:id="displayControl2" disable="true" />
+                <TextField fx:id="displayControl3" disable="true" />
+                <TextField fx:id="displayControl4" disable="true" />
+                <TextField fx:id="displayControl5" disable="true" />
+                <TextField fx:id="displayControl6" disable="true" />
+            </children>
+        </VBox>
+        <StackPane fx:id="controlsArea">
+            <children>
+                <fx:include fx:id="sliderPanel" source="slider-panel.fxml" />
+            </children>
+        </StackPane>
+    </children>
+</HBox>
