@@ -271,7 +271,9 @@ class ControlContainer[COut](
 
           // wrappedControlPane.getChildren().forEach(x => println(x.toString()))
         }
-        wrappedControl = newControlSfx
+        // Re-subscribe (not just reassign) so future changes to the new
+        // control propagate up through defaultProperty as before.
+        setWrappedControl(newControlSfx)
       } else {
         defaultBehavior()
       }
