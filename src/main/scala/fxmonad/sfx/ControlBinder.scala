@@ -32,7 +32,7 @@ trait ControlBinder[A](outputControl: Control[A]) {
         .asInstanceOf[ControlContainer[A]]
         .control
         .asInstanceOf[SFXControl[?, ?, ?]]
-        .getClass != newC.asInstanceOf[SFXControl[?, ?, ?]].control.getClass)
+        .getClass != newC.asInstanceOf[SFXControl[?, ?, ?]].node.getClass)
     ) {
       outputControl.asInstanceOf[ControlContainer[A]].replaceControl(newC)
       // TODO: This now broken because the binder is not bound to the new control
@@ -43,7 +43,7 @@ trait ControlBinder[A](outputControl: Control[A]) {
         .control
         .isInstanceOf[SFXControl[A, ?, ?]] &&
       newC.isInstanceOf[SFXControl[A, ?, ?]] &&
-      newC.asInstanceOf[SFXControl[A, ?, ?]].control.isInstanceOf[SFXProxy[?]]
+      newC.asInstanceOf[SFXControl[A, ?, ?]].node.isInstanceOf[SFXProxy[?]]
     ) {
       // TODO: I'd also like to check that the type of outputControl.control.control is the same type as newC.control#SFProxy[here]
       (
@@ -51,8 +51,8 @@ trait ControlBinder[A](outputControl: Control[A]) {
           .asInstanceOf[ControlContainer[A]]
           .control
           .asInstanceOf[SFXControl[?, ?, ?]]
-          .control,
-        newC.asInstanceOf[SFXControl[?, ?, ?]].control
+          .node,
+        newC.asInstanceOf[SFXControl[?, ?, ?]].node
       ) match {
         case (c1: TextField, c2: TextFieldProxy) => c2.applyChanges(c1)
         case (c1: CheckBox, c2: CheckBoxProxy)   => c2.applyChanges(c1)

@@ -107,9 +107,9 @@ abstract class Control[COut] {
 
   val defaultProperty: Property[COut, ?]
 
-  protected[fxmonad] def showError(errorMsg: String): Unit
+  protected def showError(errorMsg: String): Unit
 
-  protected[fxmonad] def clearError(): Unit
+  protected def clearError(): Unit
 
   // def map[B](f: (COut) => B): Control[B, ?] = new CarrierControl(f(defaultProperty()))
   def flatMap[B](f: (x: COut) => Control[B]): Control[B] = f(defaultProperty())
@@ -216,11 +216,13 @@ class ControlContainer[COut](
   })
 
   override protected[fxmonad] def showError(errorMsg: String): Unit = {
-    wrappedControl.showError(errorMsg)
+    // TODO: this should not stay commented; it requires more consideration.
+    //wrappedControl.showError(errorMsg)
   }
 
   override protected[fxmonad] def clearError(): Unit = {
-    wrappedControl.clearError()
+    // TODO: this should not stay commented; it requires more consideration.
+    //wrappedControl.clearError()
   }
 
   // TODO: It seems both 1. a problem and 2. necessary for the internal type to change. The only impact, really, is to use a different conversion internally and to change the signature of updateProperty. Does it need to be part of the external type declaration?
@@ -240,33 +242,33 @@ class ControlContainer[COut](
       (newControl.isInstanceOf[SFXControl[COut, ?, ?]]) &&
       (wrappedControl
         .asInstanceOf[SFXControl[?, ?, ?]]
-        .control
+        .node
         .getClass != newControl
         .asInstanceOf[SFXControl[COut, ?, ?]]
-        .control
+        .node
         .getClass()) &&
       !(newControl
         .asInstanceOf[SFXControl[?, ?, ?]]
-        .control
+        .node
         .isInstanceOf[SFXProxy[?]])
     ) {
       val wrappedControlSfx = wrappedControl.asInstanceOf[SFXControl[?, ?, ?]]
       val newControlSfx = newControl.asInstanceOf[SFXControl[COut, ?, ?]]
-      val wrappedControlParent = wrappedControlSfx.control.parent()
+      val wrappedControlParent = wrappedControlSfx.node.parent()
       if (wrappedControlParent.isInstanceOf[Pane]) {
         val wrappedControlPane = wrappedControlParent.asInstanceOf[Pane]
         Platform.runLater {
           // TODO: This should replace the other control in the same index
           val index = wrappedControlPane
             .getChildren()
-            .indexOf(wrappedControlSfx.control.delegate)
+            .indexOf(wrappedControlSfx.node.delegate)
           if (index > -1) {
             wrappedControlPane
               .getChildren()
-              .remove(wrappedControlSfx.control.delegate)
+              .remove(wrappedControlSfx.node.delegate)
             wrappedControlPane
               .getChildren()
-              .add(index, newControlSfx.control.delegate)
+              .add(index, newControlSfx.node.delegate)
           } else { /* TODO: This probably needs something more. */ }
 
           // wrappedControlPane.getChildren().forEach(x => println(x.toString()))

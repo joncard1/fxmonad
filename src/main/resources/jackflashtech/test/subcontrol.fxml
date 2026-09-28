@@ -1,0 +1,16 @@
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"  xmlns="http://javafx.com/javafx/2.2" fx:controller="jackflashtech.test.Subcontroller" style="-fx-border-color: black; -fx-border-width: 2px; -fx-border-style: solid;">
+  <padding>
+      <Insets top="10" right="15" bottom="10" left="15"/>
+  </padding>
+
+  <center>
+    <VBox>
+      <TextField fx:id="textbox" />
+      <Button fx:id="button">My button</Button>
+    </VBox>
+  </center>
+</BorderPane>

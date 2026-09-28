@@ -46,29 +46,30 @@ object CheckBoxControl {
 
 class CheckBoxControl[COut](
     override val defaultProperty: Property[COut, ?],
-    control: CheckBox = CheckBoxProxy()
+    override val node: CheckBox = CheckBoxProxy()
 )(using
     inConversion: Conversion[COut, Boolean],
     outConversion: Conversion[Boolean, COut]
-) extends SFXControl[COut, Boolean, CheckBox](control)(using
+) extends SFXControl[COut, Boolean, CheckBox](node)(using
       inConversion,
       outConversion
     ) {
   override protected[fxmonad] def showError(errorMsg: String): Unit =
-    control.tooltip() = Tooltip(errorMsg)
-  override protected[fxmonad] def clearError(): Unit = control.tooltip() = null
+    node.tooltip() = Tooltip(errorMsg)
+  override protected[fxmonad] def clearError(): Unit = node.tooltip() = null
 
-  control.selected.onChange((_, _, newVal) => updateProperty(newVal))
+  // TODO: two unused variables, but I'm not sure if they would be useful to track and having trouble thinking about it. My memory of this part of the code is vague.
+  node.selected.onChange((_, _, newVal) => updateProperty(newVal))
 
   defaultProperty.onChange((_, _, newVal) => {
     inConversion(defaultProperty()) match {
       case Right(nv) =>
-        control.selected() = nv
+        node.selected() = nv
         clearError()
       case Left(msg) =>
         showError(msg)
     }
   })
 
-  updateProperty(control.selected())
+  updateProperty(node.selected())
 }

@@ -22,6 +22,7 @@ object MainApp extends JFXApp3 {
           ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
       } :: lookups.getOrElse(classOf[Color], List())))
     })
+    // TODO: Maybe use the SFXControl function I just created...
     stage = new JFXApp3.PrimaryStage {
       val viewClass = getClass.getResource("main-screen.fxml")
       println(viewClass.toString())

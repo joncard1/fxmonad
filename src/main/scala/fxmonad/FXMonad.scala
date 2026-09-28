@@ -17,7 +17,7 @@ object FXMonad {
   import fxmonad.Control.given
 
   val lookups: AtomicReference[Map[Class[?], List[
-    PartialFunction[javafx.scene.control.Control, Control[?]]
+    PartialFunction[javafx.scene.Node, Control[?]]
   ]]] = AtomicReference(
     Map(
       (classOf[String]) -> List({
@@ -30,6 +30,11 @@ object FXMonad {
           ControlContainer(
             new StringProperty(),
             CheckBoxControl[String](scalafx.scene.control.CheckBox(c))
+          )
+        case c: javafx.scene.control.Label =>
+          ControlContainer(
+            new StringProperty(),
+            LabelControl[String](new scalafx.scene.control.Label(c))
           )
       }),
       (classOf[Int]) -> List({
@@ -66,13 +71,13 @@ object FXMonad {
 
   def lookupControl(
       typ: Class[?],
-      control: javafx.scene.control.Control
+      control: javafx.scene.Node
   ): Control[?] = {
     @tailrec
     def lookupInternal(
-        control: javafx.scene.control.Control,
+        control: javafx.scene.Node,
         lookupList: List[
-          PartialFunction[javafx.scene.control.Control, Control[?]]
+          PartialFunction[javafx.scene.Node, Control[?]]
         ]
     ): Option[Control[?]] = {
       lookupList match {
@@ -136,7 +141,7 @@ class FXMonad(id: String) extends MacroAnnotation {
         val typeTree = TypeTree.of(using annotationSymbol.typeRef.asType)
         val annotationConstructor = annotationSymbol.primaryConstructor
         val jfxControlTypeSymbol =
-          Symbol.classSymbol("javafx.scene.control.Control")
+          Symbol.classSymbol("javafx.scene.Node")
         val jfxControlSymbol = Symbol
           .newVal(
             Symbol.spliceOwner,
@@ -182,7 +187,7 @@ class FXMonad(id: String) extends MacroAnnotation {
                   Some('{
                     if (
                       ${
-                        jfxControlRef.asExprOf[javafx.scene.control.Control]
+                        jfxControlRef.asExprOf[javafx.scene.Node]
                       } == null
                     )
                       throw Exception(
@@ -192,7 +197,7 @@ class FXMonad(id: String) extends MacroAnnotation {
                       )
                     FXMonad.lookupControl(
                       ${ classOfTerm.asExprOf[Class[?]] },
-                      ${ jfxControlRef.asExprOf[javafx.scene.control.Control] }
+                      ${ jfxControlRef.asExprOf[javafx.scene.Node] }
                     )
                   }.asTerm)
                 )

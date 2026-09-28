@@ -1,7 +1,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
 <StackPane xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx/2.2" fx:controller="jackflashtech.test.Controller">
+    <padding>
+        <Insets top="10" right="15" bottom="10" left="15"/>
+    </padding>
     <children>
         <VBox>
             <HBox>
@@ -39,6 +43,10 @@
                     <TextField fx:id="textBox6"></TextField>
                 </VBox>
             </HBox>
+            <VBox>
+                <fx:include fx:id="subcontrol" source="subcontrol.fxml" />
+                <Label fx:id="subcontrolLabel">Default</Label>
+            </VBox>
         </VBox>
     </children>
 </StackPane>

@@ -66,6 +66,19 @@ class Controller extends ReceivesEvents[Msg] {
   lazy val checkBoxC3: Control[String] = ???
 
   @FXML
+  var subcontrolController: Object = null
+  lazy val sc: Control[String] = if (!subcontrolController.isInstanceOf[Control[?]]) { // TODO: This doesn't really work becasue of type erasure. I wonder if it's even worth doing the type check, but at least it checks if it is some kind of sub-class of Control.
+    throw new Exception("This is the wrong type")
+  } else {
+    subcontrolController.asInstanceOf[Control[String]]
+  }
+
+  @FXMonad("subcontrolLabel")
+  lazy val subcontrol: Control[String] = ???
+
+  // TODO: Create a scenario where a radio button controls two different FXML files to be loaded.
+
+  @FXML
   def initialize() = {
     import fxmonad.Control.given
 
@@ -75,9 +88,9 @@ class Controller extends ReceivesEvents[Msg] {
           s"${shouldBeInt.toString()} and ${shouldBeString}"
         )
         if (shouldBeInt > 10) {
-          newC.control.styleClass.add("emphasis")
+          newC.node.styleClass.add("emphasis")
         } else { // TODO: This doesn't work right when removing a style, because the new control doesn't have the style, so the remove action is by index and reports removing at index -1, but the control to update does have the class and it doesn't get removed. It would be nice if the new control was initialized with the new control. Maybe this function should take a (using control) and any new control automatically wraps the old control? Except I want it to be able to change the control.
-          newC.control.styleClass.removeAll("emphasis")
+          newC.node.styleClass.removeAll("emphasis")
         }
 
         newC
@@ -124,6 +137,10 @@ class Controller extends ReceivesEvents[Msg] {
         age() = 0
       }
       resetAgeEmitter.onAction(_ => ResetAgeClicked)
+    }
+
+    subcontrol(sc) = { (name: String) =>
+      LabelControl(name)
     }
   }
 }
