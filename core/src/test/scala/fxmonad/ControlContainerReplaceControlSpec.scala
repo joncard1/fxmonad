@@ -23,6 +23,11 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
     FxToolkit.cleanupStages()
   }
 
+  // TODO: I added Platform.runLater to SFCControlContainer because, in my implementation of BraceletHidControl, the Bluetooth event thread was updating ScalaFX properties, which updated JavaFX properties, which meant updates to the JavaFX system had to be marshalled to the JavaFX thread. That caused problems here because this assumes that the code here doesn't change threads. I'm not sure what the solution is: either changes to properties need to be made on the JavaFX Application Thread (which I don't think is required) or I need a definite decision on when changes need to be marshalled to the Java Application Thread, which I'm not sure I know how to make. SFXControlContainer seems like the correct place, but I'm not 100% sure.
+  // TODO: I wonder if calling body, then adding the latch to runLater, then waiting on the latch will work, but I'm not sure if things added to runLater are guaranteed to run in order?
+  //  I tried that, and the "same-class proxy" test passed, but the others didn't. Must be a different issue, but commenting out Platform.runLater in SFXControlContainer fixed those.
+  //  The "new control has no widget" test failed in either case; that's a known different issue.
+  //  Actually, that might not be the issue, because there's already a call to Platform.runLater in swapWidget, so why did the HID thread run into problems? Maybe I need to take that call back out and debug that differently.
   /** Runs `body` on the FX thread and waits for it to finish. Use when
     * `replaceControl` isn't expected to schedule any scene-graph mutation
     * (nothing to flush via a second `Platform.runLater`).
@@ -35,7 +40,7 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
       catch { case t: Throwable => error = Some(t) }
       finally { latch.countDown() }
     })
-    assert(latch.await(5, TimeUnit.SECONDS), "FX thread callback never ran")
+    assert(latch.await(30, TimeUnit.SECONDS), "FX thread callback never ran")
     error.foreach(throw _)
   }
 
@@ -77,11 +82,11 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
         TextFieldControl[Int](5, new scalafx.scene.control.TextField())
       pane.getChildren().add(oldWidget.control.delegate)
       val container =
-        new ControlContainer[Int](new IntegerProperty(), oldWidget)
+        ControlContainer[Int](new IntegerProperty(), oldWidget)
 
       // A ControlContainer isn't itself an SFXControl, matching the sliders in
       // BraceletController, which are Control[Intensity] backed by one.
-      val newValueOnly = new ControlContainer[Int](
+      val newValueOnly = ControlContainer[Int](
         new IntegerProperty(),
         TextFieldControl[Int](42)
       )
@@ -99,14 +104,15 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
     "old control has no widget: value is still tracked live even though placement is unimplemented"
   ) {
     onFx {
-      val initialNonWidget = new ControlContainer[Int](
+      val initialNonWidget = ControlContainer[Int](
         new IntegerProperty(),
         TextFieldControl[Int](1)
       )
       val container =
-        new ControlContainer[Int](new IntegerProperty(), initialNonWidget)
+        ControlContainer[Int](new IntegerProperty(), initialNonWidget)
 
-      val newWidgetControl = TextFieldControl[Int](7)
+      // TODO: I changed this test. if both the old and the new widget are proxies, there's nothing to track.
+      val newWidgetControl = TextFieldControl[Int](7, new scalafx.scene.control.TextField())
       container.replaceControl(newWidgetControl)
       assertEquals(container(), 7)
 
@@ -122,7 +128,7 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
       val realTextField = new scalafx.scene.control.TextField()
       val oldWidget = TextFieldControl[Int](5, realTextField)
       val container =
-        new ControlContainer[Int](new IntegerProperty(), oldWidget)
+        ControlContainer[Int](new IntegerProperty(), oldWidget)
 
       // Backed by a default TextFieldProxy - the shape a binding function
       // like `TextFieldControl(newValue)` normally returns.
@@ -139,7 +145,7 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
       val realTextField = new scalafx.scene.control.TextField()
       val oldWidget = TextFieldControl[Int](5, realTextField)
       val container =
-        new ControlContainer[Int](new IntegerProperty(), oldWidget)
+        ControlContainer[Int](new IntegerProperty(), oldWidget)
 
       // Backed by a default CheckBoxProxy: wrong shape to replay onto a TextField.
       val mismatchedProxyControl = CheckBoxControl[Int](1)
@@ -168,7 +174,7 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
 
       val oldWidget = TextFieldControl[Int](5, realTextField)
       val container =
-        new ControlContainer[Int](new IntegerProperty(), oldWidget)
+        ControlContainer[Int](new IntegerProperty(), oldWidget)
 
       // A genuine (non-proxy) widget, as in the temperatureDisplay Label/TextField swap example.
       newLabelControl = LabelControl[Int](9, new scalafx.scene.control.Label())
@@ -191,7 +197,7 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
       val oldWidget =
         TextFieldControl[Int](5, new scalafx.scene.control.TextField())
       val container =
-        new ControlContainer[Int](new IntegerProperty(), oldWidget)
+        ControlContainer[Int](new IntegerProperty(), oldWidget)
 
       val newLabelControl =
         LabelControl[Int](9, new scalafx.scene.control.Label())

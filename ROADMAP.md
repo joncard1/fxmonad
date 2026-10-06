@@ -4,7 +4,13 @@ This project is still pretty immature, so rather than setting release candidate 
 
 ## Features
 
-[ ] Ensure @FXMonad macro isn't required
+- [ ] Possibly add code to FXMonad (or whatever eventually does it) to detect if the custom control whose controller is being included is a ControlPane, which might mean that it, rather than the controller, should be the Control[?]. (Might not be possble) And what happens when using <fx:root> and it's loaded into a ControlPane?
+
+- [ ] Create a method to register new classes in Control.lookups. Expecting users to interact directly with it isn't realistic.
+
+- [ ] Create injectable "error display strategy" method; it shouldn't necessary for this library to preemptively decide to use tooltips.
+
+- [X] Ensure @FXMonad macro isn't required
 
 Maybe this project has a bifurcated focus, but I like the macro functionality because I find using JavaFX with ScalaFX cumbersome and ScalaFXML hasn't adapted to Scala 3 macros, but at the same time it's not required for the monadic operating paradigm and requires the client project to have things like the @experimental tag that are probably prohibitive for users. Making sure users use ControlContainer rather than just TextFieldControl (or similar) is an extra bit of documentation and source of possible bugs that hopefully can be mitigated. A controller could be implemented with
 
@@ -16,11 +22,11 @@ class Controller {
 }
 ```
 
-[ ] Maybe there should be implementations that just wrap JavaFX
+- [ ] Maybe there should be implementations that just wrap JavaFX
 
 The amount of layering of wrappers here is a pain. It's required to wrap JavaFX controls but it's not necessarily required to wrap ScalaFX controls, which wrap JavaFX controls. They could be distinguished by "import fxmonad.sfx.\_" vs "import fxmonad.jfx.\_"
 
-[ ] Gradio-like easy control initialization
+- [ ] Gradio-like easy control initialization
 
 Gradio has a very easy initialization for UIs that don't require much control over layout and styling that looks like 
 
@@ -37,7 +43,7 @@ with gr.Blocks() as demo:
 
 I'm not sure if something like this is possible with this kind of integration with JavaFX while preserving the integration with FXML (which is my priority right now. I guess if you want Gradio, use Gradio; obviously, I think Gradio's pretty neat), but if it is, it should be done. I'm not sure why Gradio uses the "with" block; it's a funny use of "with" because it seems to require the initialization be complete by the time the "close" on "demo" happens and instead of discarding the resource "demo" at the end of the block like you would with a database connection it uses that as a signal that initialization is done, but without context parameters I don't understand how the value in the "demo" variable is related to inside the "with" block. Getting it to work in Scala will probably require learning that. Maybe it will be enough to use the @FXML-tagged "initialize" function.
 
-[ ] Support for Future objects
+- [ ] Support for Future objects
 
 Writing the description below of ComboBox suggests that it should be writable as 
 
@@ -50,13 +56,17 @@ provinces(countries) = (country: String) => {
 
 so Control#update[A, B](Control[A], f: (A) => Control[B]) should be matched by Control#update[A, B](Control[A], f: (A) => Future[Control[B]]) or maybe Control#update[F[_]: Monad[F], A, B](Control[A], f: (A) => F[Control[B]])
 
-[ ] Better understanding of SFXProxy: 1. whether there's a better way to "replay" changes made in controller functions, 2. which functions need "throwError" added to them to ensure they aren't accidentally used in unsupported ways, 3. which properties need to be subscribed to to replay changes. I'm torn between only adding support for properties once a use-case has been demonstrated and not wanting to leave things unimplemented because I didn't think of something. I suspect this is a conflict between my normal experience as a corporate services developer and the fact that this is more like a product [Joel Spolsky's 5 worlds](https://www.joelonsoftware.com/2002/05/06/five-worlds/) (What he calls Internal and Shrinkwrap, but I think is better looked at as Service and Product).
+- [ ] Better understanding of SFXProxy: 1. whether there's a better way to "replay" changes made in controller functions, 2. which functions need "throwError" added to them to ensure they aren't accidentally used in unsupported ways, 3. which properties need to be subscribed to to replay changes. I'm torn between only adding support for properties once a use-case has been demonstrated and not wanting to leave things unimplemented because I didn't think of something. I suspect this is a conflict between my normal experience as a corporate services developer and the fact that this is more like a product [Joel Spolsky's 5 worlds](https://www.joelonsoftware.com/2002/05/06/five-worlds/) (What he calls Internal and Shrinkwrap, but I think is better looked at as Service and Product).
+
+- [ ] Forgot I didn't finish fleshing out SFXProxy.
 
 ## Controls
 
-[ ] Custom controls. This is already implemented (mostly) in the branch add-pane-control, but I there are some TODOs that need to be considered.
+- [ ] Changes in the proxies to styleClass are being mismanaged because the Change vocabulary isn't robust enough.
 
-[ ] ComboBox
+- [ ] Custom controls. This is already implemented (mostly) in the branch add-pane-control, but I there are some TODOs that need to be considered.
+
+- [ ] ComboBox
 
 This should generally include a feature to bind the list of selections, something like 
 
@@ -86,14 +96,14 @@ provinces(countries) = (country: String) => {
 
 and this would want to work for ComboBox, ComobList, but also Table without having a "selected" property (This last bit is the difficult one, because that would be a ControlList[DataObject], it wouldn't also be a Control[DataObject]). I think these traits should mix together without requiring each other.
 
-[ ] More controls
+- [ ] More controls
 
 This list should actually be expanded to include each control specifically so they can be checked off. I'm just not entirely sure what the list should include. It's probably not worth including some things, like GridPane. If you need control of GridPane, you aren't interested entirely in the monadic form. Should that encourage you away from this library? Would it be prohibitive to mix usage together, make your business logic easier but still enabling you to access the UI controls? It would be nice if there's value to this even when you don't give up accessing JavaFX directly; I'm not sure it's entirely about hiding JavaFX from the developer, only making dealing with it optional and being able to invisibly mix-in other controls systems (like wearables) possible.
 
-[ ] Moving off ROADMAP.md to a better maintained Issues list in GitHub.com
+- [ ] Moving off ROADMAP.md to a better maintained Issues list in GitHub.com
 
 ## Project Overhead
 
-[ ] Add code coverage reporting
+- [ ] Add code coverage reporting
 
-[ ] Add/configure linter. I added scalafmt and scalafix and ran "scalafix/RemoveUnused", but there's probably more to be done.
+- [ ] Add/configure linter. I added scalafmt and scalafix and ran "scalafix/RemoveUnused", but there's probably more to be done.

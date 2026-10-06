@@ -1,8 +1,8 @@
 package fxmonad.sfx
 
 import scalafx.scene.control.CheckBox
+import fxmonad.Control
 import scalafx.beans.property.Property
-import scalafx.scene.control.Tooltip
 import fxmonad.sfx.SFXControl
 import fxmonad.PropertyConstructor
 import fxmonad.Conversion
@@ -46,21 +46,29 @@ object CheckBoxControl {
 
 class CheckBoxControl[COut](
     override val defaultProperty: Property[COut, ?],
-    control: CheckBox = CheckBoxProxy()
+    override val control: CheckBox = CheckBoxProxy()
 )(using
     inConversion: Conversion[COut, Boolean],
     outConversion: Conversion[Boolean, COut]
 ) extends SFXControl[COut, Boolean, CheckBox](control)(using
       inConversion,
       outConversion
-    ) {
-  override protected def displayError(errorMsg: String): Unit =
-    control.tooltip() = Tooltip(errorMsg)
-  override protected def clearDisplayedError(): Unit = control.tooltip() = null
+    )
+    with TooltipValidationErrorStrategy[COut, Boolean, CheckBox] {
 
-  control.selected.onChange((_, _, newVal) => updateProperty(newVal))
+  override protected[fxmonad] def updateFrom: PartialFunction[Control[COut], Unit] = {
+    val updateFromProxy: PartialFunction[Control[COut], Unit] = {
+      case source: CheckBoxControl[?]
+          if source.control.isInstanceOf[CheckBoxProxy] =>
+        source.control.asInstanceOf[CheckBoxProxy].applyChanges(control)
+    }
+    updateFromProxy.orElse(super.updateFrom)
+  }
 
-  defaultProperty.onChange((_, _, newVal) => {
+  private val _ =
+    control.selected.onChange((_, _, newVal) => updateProperty(newVal))
+
+  private val _ = defaultProperty.onChange((_, _, _) => {
     inConversion(defaultProperty()) match {
       case Right(nv) =>
         control.selected() = nv

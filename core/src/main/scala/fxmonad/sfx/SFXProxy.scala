@@ -15,12 +15,19 @@ import sfxc.Label
 import sfxc.ColorPicker
 import sfxc.RadioButton
 import scalafx.scene.paint.Color
+import sfxc.ToggleGroup
+import sfxc.Toggle
 
 case class Change(propertyName: String, oldVal: Any, newVal: Any)
 
-// TODO: This is really for intercepting calls to properties of a control, creating a list of changes to apply to a real control so that those changes can be applied to a real control later. Mostly, calls to normal controls should not be supported.
+trait Proxy[A] {
+  protected[fxmonad] var changes: List[Change] = List()
+
+  def applyChanges(control: A): Unit
+}
+
 // TODO: It seems like there should be a programmtic way to build this, like with macros, to just override every definition except the ones that are explicitly defined.
-// TODO: I wonder if I should really create a JFX Control proxy instead of an ScalaFX control proxy. It seems like it'll be harder to intercept things going to
+// TODO: I wonder if I should really create a JFX Control proxy instead of an ScalaFX control proxy.
 /** This trait converts a ScalaFX control to a proxy of a ScalaFX control that
   * logs the changes made to the control for the purpose of replaying those
   * changes to an actual control. This allows the use case where a logic method
@@ -56,8 +63,7 @@ case class Change(propertyName: String, oldVal: Any, newVal: Any)
   * pre-populated, rather than using a proxy. That may be needed, considering
   * the problem with removing styleClass entries (for example).
   */
-sealed trait SFXProxy[A <: sfxc.Control] { this: A =>
-  protected[fxmonad] var changes: List[Change] = List()
+sealed trait SFXProxy[A <: sfxc.Control] extends Proxy[A] { this: A =>
 
   // TODO: This is a bad error message. It's ok for devs using the library, not for showing users of the dev's project.
   /** A helper method for methods that should not be called from the FXMonad
@@ -85,16 +91,12 @@ sealed trait SFXProxy[A <: sfxc.Control] { this: A =>
       }
   }
 
-  def applyChanges(control: A): Unit = {
-    var revChanges = changes.reverse
-    for {
-      change <-
-        revChanges // TODO: This is super dicey: I'm relying on the name being correct to match the types, which isn't very stable and I don't really know how to do what I want better.
-      _ <- List(applyChangesPF(control)(change))
-    } yield (())
+  override def applyChanges(control: A): Unit = {
+    val revChanges = changes.reverse
+    revChanges.map(applyChangesPF(control)): Unit
   }
 
-  prefHeight.onChange((prop, oldVal, newVal) => {
+  private val _ = prefHeight.onChange((_, oldVal, newVal) => {
     changes = Change(
       "prefHeight",
       oldVal.doubleValue(),
@@ -102,13 +104,19 @@ sealed trait SFXProxy[A <: sfxc.Control] { this: A =>
     ) :: changes
   })
 
-  style.onChange((prop, oldVal, newVal) => {
+  private val _ = style.onChange((_, oldVal, newVal) => {
     changes = Change("style", oldVal, newVal) :: changes
   })
 
-  styleClass.onChange((prop, localChanges) => {
+  // TODO: this has been updated to just swallow changes to styleClass, because it appears that my Change lexicon was too simple and I hadn't realized.
+  private val _ = styleClass.onChange((_, localChanges) => {
     changes = localChanges
-      .map(x => Change("styleClass", null, x))
+      .flatMap {
+        case Add(position, added)             => List()
+        case Remove(position, removed)        => List()
+        case Reorder(start, end, permutation) => List()
+        case Update(from, to)                 => List()
+      }
       .reverse
       .toList ::: changes
   })
@@ -130,7 +138,7 @@ sealed trait SFXProxy[A <: sfxc.Control] { this: A =>
 
 class TextFieldProxy extends TextField with SFXProxy[TextField] {
 
-  text.onChange((prop, oldVal, newVal) => {
+  private val _ = text.onChange((_, oldVal, newVal) => {
     changes = Change("text", oldVal, newVal) :: changes
   })
 
@@ -140,13 +148,14 @@ class TextFieldProxy extends TextField with SFXProxy[TextField] {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("text", _, _) =>
         control.text() = c.newVal.asInstanceOf[String]
+        println(s"Control: ${control.text()}")
     }
     localChange.orElse(super.applyChangesPF(control))
   }
 }
 
 class CheckBoxProxy extends CheckBox with SFXProxy[CheckBox] {
-  selected.onChange((prop, oldVal, newVal) => {
+  private val _ = selected.onChange((_, oldVal, newVal) => {
     changes = Change("selected", oldVal, newVal) :: changes
   })
 
@@ -162,7 +171,7 @@ class CheckBoxProxy extends CheckBox with SFXProxy[CheckBox] {
 }
 
 class RadioButtonProxy extends RadioButton with SFXProxy[RadioButton] {
-  selected.onChange((prop, oldVal, newVal) => {
+  private val _ = selected.onChange((_, oldVal, newVal) => {
     changes = Change("selected", oldVal, newVal) :: changes
   })
 
@@ -178,7 +187,7 @@ class RadioButtonProxy extends RadioButton with SFXProxy[RadioButton] {
 }
 
 class SliderProxy extends Slider with SFXProxy[Slider] {
-  value.onChange((prop, oldVal, newVal) => {
+  private val _ = value.onChange((_, oldVal, newVal) => {
     changes = Change("value", oldVal, newVal) :: changes
   })
 
@@ -194,7 +203,7 @@ class SliderProxy extends Slider with SFXProxy[Slider] {
 }
 
 class LabelProxy extends Label with SFXProxy[Label] {
-  text.onChange((prox, oldVal, newVal) => {
+  private val _ = text.onChange((_, oldVal, newVal) => {
     changes = Change("text", oldVal, newVal) :: changes
   })
 
@@ -210,7 +219,7 @@ class LabelProxy extends Label with SFXProxy[Label] {
 }
 
 class ColorPickerProxy extends sfxc.ColorPicker with SFXProxy[ColorPicker] {
-  this.value.onChange((prox, oldVal, newVal) => {
+  private val _ = this.value.onChange((_, oldVal, newVal) => {
     changes = Change("value", oldVal, newVal) :: changes
   })
 
@@ -223,4 +232,28 @@ class ColorPickerProxy extends sfxc.ColorPicker with SFXProxy[ColorPicker] {
     }
     localChange.orElse(super.applyChangesPF(control))
   }
+}
+
+// TODO: This whole class, because ToggleGroup is not a control, probably requires a bunch of more implementation, namely subscribing to all the properties and handling all of the possible changes.
+class ToggleGroupProxy extends sfxc.ToggleGroup with Proxy[ToggleGroup] {
+  val selectedGroupSubscription =
+    this.selectedToggle.onChange((_, oldVal, newVal) => {
+      changes = Change("selectedToggle", oldVal, newVal) :: changes
+    })
+
+  override def applyChanges(control: ToggleGroup): Unit = {
+    this.changes.reverse.map(_ match {
+      case c @ Change("selectedToggle", _, _) =>
+        control.toggles
+          .find(
+            _.getUserData().equals(c.newVal.asInstanceOf[Toggle].getUserData())
+          )
+          .map(_.setSelected(true)): Unit
+      case c =>
+        println(
+          s"Failed to match change ${c.toString()}. Probably not implemented."
+        )
+    }): Unit
+  }
+
 }

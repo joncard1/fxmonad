@@ -1,6 +1,5 @@
 package fxmonad
 
-import scalafx.application.JFXApp3
 import scalafx.application.Platform
 import java.util.concurrent.CountDownLatch
 import fxmonad.sfx.TextFieldProxy

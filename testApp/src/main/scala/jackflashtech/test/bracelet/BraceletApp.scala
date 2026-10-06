@@ -6,39 +6,44 @@ import javafx.{scene => jfxs}
 import scalafx.scene.Scene
 import scalafx.Includes._
 import scala.annotation.experimental
-import fxmonad.{ControlContainer, FXMonad, PropertyConstructor}
+import fxmonad.{Control, ControlContainer, PropertyConstructor}
 import fxmonad.sfx._
-import scalafx.beans.property.BooleanProperty
+import scala.reflect.ClassTag
 
 /** A small ScalaFX application exercising the "bracelet" test controller. */
 @experimental
 object BraceletApp extends JFXApp3 {
   override def start(): Unit = {
-    import fxmonad.Control.given
     import IntensityInstances.given
+    import BraceletController.given
 
-    FXMonad.lookups.getAndUpdate { lookups =>
-      val withRadioButton = lookups + (classOf[Boolean] -> ({
-        case c: javafx.scene.control.RadioButton =>
+    Control.registerControl(
+      classOf[Intensity],
+      {
+        case c: javafx.scene.control.Label =>
           ControlContainer(
-            new BooleanProperty(),
-            RadioButtonControl(scalafx.scene.control.RadioButton(c))
-          )
-      } :: lookups.getOrElse(classOf[Boolean], List())))
-
-      withRadioButton + (classOf[Intensity] -> ({
-        case c: javafx.scene.control.TextField =>
-          ControlContainer(
-            summon[PropertyConstructor[Intensity]](),
-            TextFieldControl[Intensity](scalafx.scene.control.TextField(c))
+            LabelControl[Intensity](new scalafx.scene.control.Label(c))
           )
         case c: javafx.scene.control.Slider =>
           ControlContainer(
-            summon[PropertyConstructor[Intensity]](),
             SliderControl[Intensity](scalafx.scene.control.Slider(c))
           )
-      } :: withRadioButton.getOrElse(classOf[Intensity], List())))
-    }
+        case c: fxmonad.ControlPane[Intensity] =>
+          c.initializeContainer(using summon[ClassTag[Intensity]])
+          c
+      }
+    )
+
+    Control.registerControl(
+      classOf[BraceletController.DisplayMode],
+      { case c: javafx.scene.control.ToggleGroup =>
+        ControlContainer(
+          ToggleGroupControl[BraceletController.DisplayMode](
+            scalafx.scene.control.ToggleGroup(c)
+          )
+        )
+      }
+    )
 
     stage = new JFXApp3.PrimaryStage {
       val viewClass = getClass.getResource("bracelet-screen.fxml")
@@ -46,6 +51,13 @@ object BraceletApp extends JFXApp3 {
       val root: jfxs.Parent = loader.load()
       loader.getController[BraceletController]()
       scene = new Scene(root)
+    }
+
+    stage.setMinWidth(300)
+    stage.setMinHeight(250)
+
+    stage.onCloseRequest = event => {
+      BraceletHidControl.stop()
     }
   }
 }

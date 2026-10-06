@@ -10,6 +10,24 @@ import scala.annotation.experimental
 @experimental
 class SliderPanelController {
 
+  @FXMonad("intensityControl1")
+  lazy val intensity1: Control[Intensity] = ???
+
+  @FXMonad("intensityControl2")
+  lazy val intensity2: Control[Intensity] = ???
+
+  @FXMonad("intensityControl3")
+  lazy val intensity3: Control[Intensity] = ???
+
+  @FXMonad("intensityControl4")
+  lazy val intensity4: Control[Intensity] = ???
+
+  @FXMonad("intensityControl5")
+  lazy val intensity5: Control[Intensity] = ???
+
+  @FXMonad("intensityControl6")
+  lazy val intensity6: Control[Intensity] = ???
+
   @FXMonad("sliderControl1")
   lazy val slider1: Control[Intensity] = ???
 

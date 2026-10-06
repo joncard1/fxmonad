@@ -6,25 +6,18 @@ import scalafx.beans.property.StringProperty
 import scala.util.Try
 import scalafx.beans.property.BooleanProperty
 import fxmonad.sfx._
-import javafx.scene.layout.Pane
-import scalafx.application.Platform
-import scalafx.event.subscriptions.Subscription
 import fxmonad.Conversion.castConversion
 import scalafx.beans.property.DoubleProperty
-import scalafx.scene.control.{
-  TextField,
-  CheckBox,
-  Slider,
-  Label,
-  ColorPicker,
-  RadioButton
-}
+import java.util.concurrent.atomic.AtomicReference
+import scala.reflect.ClassTag
+import scalafx.beans.property.ObjectProperty
 
 object PropertyConstructor {
   given PropertyConstructor[String] = () => new StringProperty()
   given PropertyConstructor[Int] = () => new IntegerProperty()
   given PropertyConstructor[Boolean] = () => new BooleanProperty()
   given PropertyConstructor[Double] = () => new DoubleProperty()
+  given [A]: PropertyConstructor[A] = () => new ObjectProperty[A]()
 }
 
 @java.lang.FunctionalInterface
@@ -48,7 +41,174 @@ abstract class Conversion[-T, +U] extends Function1[T, Either[String, U]]:
   def apply(x: T): Either[String, U]
 
 object Control {
-  // TODO: I wonder if I'd prefer to define my own type of thing like Conversion but which was MyConversion[A, B] = (A) => Try[B] or (A) => Either[String, B] so I could define the error message in the converter instead of the control.
+
+  trait MountContext
+
+  /** A configurable collection used to register constructor functions to create
+    * the correct subclass of [[fxmonad.Control]] based on the type being
+    * exposed and control being wrapped.
+    *
+    * This collection is pre-configured with the combinations known to the
+    * library authors, but additional configurations must be provided for
+    * controls wrapping custom types. For example, for a control to expose a
+    * custom case class Car in a TestField, code similar to the following is
+    * necessary:
+    *
+    * {{{
+    *    Control.lookups.getAndUpdate(lookups => {
+    *      lookups + (classOf[Car] -> ({
+    *        case c: javafx.scene.control.TextBox =>
+    *          TextBoxControl(scalafx.scene.control.TextField(c))
+    *      } :: lookups.getOrElse(classOf[Car], List())))
+    *
+    * }}}
+    *
+    * This code presumes the availability of context parameters providing a
+    * [[fxmonad.Conversion[String, Car]]] and a
+    * [[fxmonad.Conversion[Car, String]].
+    */
+  private val lookups: AtomicReference[Map[Class[?], List[
+    PartialFunction[Object, Control[?]]
+  ]]] = AtomicReference(
+    Map(
+      (classOf[String]) -> List({
+        case c: javafx.scene.control.TextField =>
+          ControlContainer(
+            new StringProperty(),
+            TextFieldControl[String](scalafx.scene.control.TextField(c))
+          )
+        case c: javafx.scene.control.CheckBox =>
+          ControlContainer(
+            new StringProperty(),
+            CheckBoxControl[String](scalafx.scene.control.CheckBox(c))
+          )
+        case c: fxmonad.ControlPane[String] =>
+          c.initializeContainer(using summon[ClassTag[String]])
+          c
+      }),
+      (classOf[Int]) -> List({
+        case c: javafx.scene.control.CheckBox =>
+          ControlContainer(
+            new IntegerProperty(),
+            CheckBoxControl(scalafx.scene.control.CheckBox(c))
+          )
+        case c: javafx.scene.control.Slider =>
+          ControlContainer(
+            new IntegerProperty(),
+            SliderControl(scalafx.scene.control.Slider(c))
+          )
+        case c: javafx.scene.control.TextField =>
+          ControlContainer(
+            new IntegerProperty(),
+            TextFieldControl(scalafx.scene.control.TextField(c))
+          )
+        case c: fxmonad.ControlPane[Int] =>
+          c.initializeContainer(using summon[ClassTag[Int]])
+          c
+      }),
+      (classOf[Boolean]) -> List({
+        case c: javafx.scene.control.CheckBox =>
+          ControlContainer(
+            new BooleanProperty(),
+            CheckBoxControl(scalafx.scene.control.CheckBox(c))
+          )
+        case c: fxmonad.ControlPane[Boolean] =>
+          c.initializeContainer(using summon[ClassTag[Boolean]])
+          c
+        case c: javafx.scene.control.RadioButton =>
+          ControlContainer(
+            new BooleanProperty(),
+            RadioButtonControl(scalafx.scene.control.RadioButton(c))
+          )
+      }),
+      (classOf[Double]) -> List({
+        case c: javafx.scene.control.Slider =>
+          ControlContainer(
+            new DoubleProperty(),
+            SliderControl(scalafx.scene.control.Slider(c))
+          )
+        case c: fxmonad.ControlPane[Double] =>
+          c.initializeContainer(using summon[ClassTag[Double]])
+          c
+      })
+    )
+  )
+
+  /** A utility function to register constructors for [[fxmonad.Control]] based
+    * on the contained type and the wrapped control.
+    *
+    * For example: to create a [[fxmonad.Control]] that wraps a custom class
+    * called Car that is specified with a JavaFX TextField (let's suppose we are
+    * creating a Car whose name is specified in the TextField), you need to
+    * register the following constructor:
+    *
+    * {{{
+    *      Control.registerControl(classOf[Car],
+    *        {
+    *          case c: javafx.scene.control.TextField =>
+    *            TextFieldControl(c)
+    *        }
+    *
+    *      )
+    * }}}
+    *
+    * @see
+    *   [[fxmonad.ControlContainer]] for more information on whether your
+    *   constructor should wrap the generated Control[A] with a
+    *   [[fxmonad.ControlContainer]].
+    *
+    * @param typ
+    *   the type of the wrapped value
+    * @param constructors
+    *   a PartialFunction whose cases are the possible classes that will be
+    *   wrapped by a [[fxmonad.Control]] and whose return value is the
+    *   [[fxmonad.Control]] that wraps it.
+    */
+  def registerControl[A](
+      typ: Class[A],
+      constructors: PartialFunction[Object, Control[A]]
+  ): Unit = {
+    lookups.getAndUpdate(lookups => {
+      lookups +
+        (typ -> (constructors :: lookups.getOrElse(typ, List())))
+    }): Unit
+  }
+
+  /** A utilty function to construct a [[fxmonad.Control]] based on the
+    * contained type and the wrapped control.
+    *
+    * For now, this is basically only useful for controls based on JavaFX
+    * control classes. It's first use case was in the code generated by
+    * [[fxmonad.FXMonad]], but it had to move here later in the development.
+    *
+    * @param typ
+    *   The type contained in the [[fxmonad.Control]] monad.
+    * @param control
+    *   The control being wrapped by [[fxmonad.Control]].
+    */
+  // TODO: Maybe lookupControl can take a type parameter to enforce that the type passed into the first parameter can be the type parameter of the Control. That would probably still require a cast, but adding a registerLookup method could enforce on insert that they match, which would help.
+  //  My first pass at giving this a type parameter ran into trouble in FXMonad and it wasn't immediately obvious whether it was possible to address that, so I changed it back. I always have to look up how to access the type.
+  def lookupControl(
+      typ: Class[?],
+      control: javafx.scene.Node
+  ): Control[?] = {
+    // TODO: I wonder if there should be a special clause here checking for ControlPane rather than expecting scenarios where clients of the library have to add constructors for ControlPane to Control.lookups that are properly implemented.
+    //  I had to add a block to BraceletApp that says:
+    //    case c: fxmonad.ControlPane[Intensity] =>
+    //      c.initializeContainer(using summon[ClassTag[Intensity]])
+    //      c
+    // to instantiate the pane, because Intensity is a custom class. But this would break the design pattern, which I'd rather not do; that's how libraries get unexpected behaviors.
+    lookups.get
+      .getOrElse(typ, List())
+      .reduce(_.orElse(_))
+      .applyOrElse(
+        control,
+        c =>
+          throw new Exception(
+            s"Failed to find proper control for type ${typ.getTypeName()} and control ${c.getClass().getTypeName()}"
+          )
+      )
+  }
 
   private def selfConversion[A](): Conversion[A, A] = (x: A) => Right(x)
   given Conversion[Boolean, Boolean] = selfConversion()
@@ -84,6 +244,19 @@ object Control {
 
 }
 
+// TODO: I'm not sure why I put this here. inConversion is used to convert the
+//  type in the publicly exposed property and the "native" storage of the
+//  control, such as the "text" property of a TextField (String) or the
+//  "selected" property of the CheckBox (boolean). I think it's only used in
+//  the subscription to defaultProperty's onChange, and it's used in every
+//  control, but this subscription needs to be implemented differently in every
+//  control so it's not really usable in any types above the leaves of the
+//  inheritance tree. Meaning it may not be used for every kind of control, but
+//  basically will be for all ScalaFX controls and probably other types, so I
+//  created this type. Is there value in a type that makes a ScalaFX control,
+//  an HID control, and something else, but isn't Control? inCoversion isn't
+//  referenced (and presumably shouldn't be) externally, but is it important
+//  that the constructor signature is consistent? It might not be.
 abstract class ControlBase[COut, CIn](using
     inConversion: Conversion[COut, CIn],
     outConversion: Conversion[CIn, COut]
@@ -96,7 +269,7 @@ abstract class ControlBase[COut, CIn](using
     *   The new value that will be accessible in the default property.
     */
   protected def updateProperty(newVal: CIn) = {
-    if (newVal != null) { // TODO: The else branch
+    if (newVal != null) { // TODO: The else branch. Does it clear the value, or does it throw an exception? I don't like it clearing the value; we wouldn't know what the {0} value is for the data type.
       outConversion(newVal) match {
         case Right(null) =>
           showError("The control value was set to null")
@@ -110,24 +283,64 @@ abstract class ControlBase[COut, CIn](using
   }
 }
 
-abstract class Control[COut] {
+/** Exposes a control (such as a JavaFX TextField or an HID device) as an
+  * abstraction of the desired data type rather than the data type most "native"
+  * to the control itself. For example, the most intuitive data type of a JavaFX
+  * TextField is a String, but if the user is expected to type in a number, the
+  * desired data type might be called PhoneNumber. Custom validation logic can
+  * be inserted into the particular subclass of Control;
+  * @see
+  *   [[fxmonad.ControlBase]].
+  *
+  * The monad uses a flatMap-style (rather than map-style) so that it is
+  * possible to generate an alternative control in response to dependent values.
+  * For instance, a Control[String] may initially represent a Label that says
+  * "This has not been initialized" but once a dependent value changes, it may
+  * represent a YouTube player where the "String" in question is the URL of the
+  * video to display.
+  *
+  * An example use:
+  * {{{
+  * lazy val slider1: Control[Int] = SliderControl[Int](...)
+  * lazy val slider2: Control[Int] = SliderControl[Int](...)
+  * lazy val outputDisplay: Control[String] = LabelControl(...)
+  *
+  * outputDisplay(slider1, slider2) = { (sliderVal1: Int, sliderVal2: Int) =>
+  *      LabelControl((sliderVal1 + sliderVal2).toString())
+  *    }
+  * }}}
+  *
+  * @see
+  *   [[fxmonad.ControlCollection]] and @see [[fxmonad.ControlPane]] for more
+  *   complex uses, such as substituting new controls as a result of the bound
+  *   method (which will not happen in the simple example above).
+  */
+trait Control[COut] {
   protected var binder: Option[ControlBinder[COut]] = None
 
   val defaultProperty: Property[COut, ?]
 
-  /** Only fxmonad-internal code (conversion/binding machinery) may trigger
-    * error display; the actual rendering is left to `displayError`, which any
-    * subclass - in any package - can implement.
+  protected[fxmonad] def updateFrom: PartialFunction[Control[COut], Unit] = {
+    case source => defaultProperty() = source.defaultProperty()
+  }
+
+  /** Displays the error message. This is not intended to be called outside the
+    * fxmonad library; it is exposed as public only so that it can be
+    * implemented in client subclasses as well as called from other classes in
+    * this package.
+    *
+    * @param errorMsg
+    *   The message to display to the user to indicate a validation failure.
     */
-  protected[fxmonad] def showError(errorMsg: String): Unit = displayError(
-    errorMsg
-  )
-  protected[fxmonad] def clearError(): Unit = clearDisplayedError()
+  def showError(errorMsg: String): Unit
 
-  protected def displayError(errorMsg: String): Unit
-  protected def clearDisplayedError(): Unit
+  /** Removes the error message. This is not intended to be called outside the
+    * fxmonad library; it is exposed as public only so that it can be
+    * implemented in client subclasses as well as called from other classes in
+    * this package.
+    */
+  def clearError(): Unit
 
-  // def map[B](f: (COut) => B): Control[B, ?] = new CarrierControl(f(defaultProperty()))
   def flatMap[B](f: (x: COut) => Control[B]): Control[B] = f(defaultProperty())
 
   def apply(): COut = defaultProperty()
@@ -174,154 +387,9 @@ abstract class Control[COut] {
     }
     binder.flatMap(x => Option(x.updateValue())).get
   }
-}
 
-// TODO: I think the idea here is to someday create the proxy for javafx.scene.control.Control
-//  (at least) that can have values set on it and then a diff can be run so that
-//  the changed variables get transferred to the underlying object (if it's the
-//  same type) or possibly the control is replaced (if it's a different type) in
-//  the JavaFX render tree. Then, change the signature of the "update" methods so
-//  that they are more like flatMap functions instead of map functions, and pass
-//  in a Monad[Control] that can be used to create an instance of Control[A]. That
-//  way, the logic function can potentially change the properties of the display
-//  controls as part of the logic. I have no idea how gradio does it, how they
-//  return a complete object and then only transfer the diff to the old object, or
-//  make the new object a clone of the old one somehow before allowing them the
-//  change the properties, or what.
-// This would require more sensible creation logic for Control[A] than I currently
-//  have, which has separate classes for the entire cross-product of supported
-//  values and controls.
-// How would the system create the correct instance of Monad[Control] for the type of control the user will want to create? So that Monad[Control]#pure() will create an instance of Control[A] with the correct containing control? Or maybe provide Control.create(value, control) and have the lookup performed there? In some extensible way that wouldn't break if it's run at compile time (because of FXMonad)?
-// I could change the signature of update to be (..., f: (Control[A], Control[B], Control[C]) =>? (Monad[Control]) => Control[D]), but that would enforce that the created Control would create Control[D]. And could I pass that the ControlBinder as f(_, _, _)(using aMonad)? Or would I just change ControlBinder?
-// Is this useful to create Monad[Control] if flatMap is built-in and the monad couldn't be summoned because pure is all strange?
-/*
-class CarrierControl[A](value: A)(using inConversion: Conversion[COut, CIn], outConversion: Conversion[CIn, COut]) extends Control[A, ?](using inConversion, outConversion) {
+  def mountControl(context: Option[Control.MountContext]): Unit
+  def unmountControl(): Option[Control.MountContext]
 
-    override val defaultProperty: Property[A, ?] = ???
-
-    override def update[B](control1: Control[B, ?], f: B => A): Control[A, ?] = ???
-    override def update[B, C](control1: Control[B, ?], control2: Control[C, ?], f: (B, C) => A): Control[A, ?] = ???
-    override def update[B, C, D](control1: Control[B, ?], control2: Control[C, ?], control3: Control[D, ?], f: (B, C, D) => A): Control[A, ?] = ???
-}
- */
-// TODO: I think the purpose of this one is to give the system a chance to replace the control internally
-// TODO: I wonder if CIn on this object should be the COut of the contained control?
-// TODO: I wonder if the types can be like Control[COut] -> ControlContainer[COut], ControlBase[COut, CIn] (which contains updateProperty) -> SFXControl -> all the others
-class ControlContainer[COut](
-    override val defaultProperty: Property[COut, ?],
-    val control: Control[COut]
-) extends Control[COut] {
-
-  private var wrappedControl: Control[COut] = scala.compiletime.uninitialized
-  private var wrappedSubscription: Option[Subscription] = None
-
-  private def setWrappedControl(control: Control[COut]) = {
-    wrappedSubscription.map(_.cancel())
-    wrappedControl = control
-    wrappedSubscription = Some(
-      wrappedControl.defaultProperty.onChange((_, _, _) => {
-        // TODO: This is broken because the ScalaFX wrapper around the JavaFX properties isn't broken-ish
-        defaultProperty() = control.defaultProperty()
-      })
-    )
-    defaultProperty() = control.defaultProperty()
-  }
-  setWrappedControl(control)
-  defaultProperty.onChange((_, _, newVal) => {
-    wrappedControl.defaultProperty() = defaultProperty()
-  })
-
-  override protected[fxmonad] def showError(errorMsg: String): Unit = {
-    wrappedControl.showError(errorMsg)
-  }
-
-  override protected[fxmonad] def clearError(): Unit = {
-    wrappedControl.clearError()
-  }
-
-  // displayError/clearDisplayedError are unused here: ControlContainer has no
-  // UI of its own, so it overrides showError/clearError directly to delegate
-  // to the wrapped control instead.
-  override protected def displayError(errorMsg: String): Unit = ()
-  override protected def clearDisplayedError(): Unit = ()
-
-  /** Reconciles the currently wrapped control against a newly-produced one
-    * (from a binding function passed to `update`), in one of a few ways:
-    *   - `newControl` has no widget of its own (e.g. it's another
-    *     `ControlContainer`, or any other non-`SFXControl`): whatever widget is
-    *     currently on screen is removed, and only the value is tracked from
-    *     then on.
-    *   - `wrappedControl` has no widget but `newControl` does: there's no way
-    *     to know where in the JavaFX tree the new widget should go. Left
-    *     unimplemented for now; the value is still tracked live.
-    *   - Both are widget-backed: if `newControl` is a proxy of the same widget
-    *     class, its recorded property changes are replayed onto the live widget
-    *     in place. If it's a proxy of a *different* widget class, there's no
-    *     way to attach a proxy node into the live scene graph either, so only
-    *     the value is tracked. Otherwise, the live widget is swapped out for
-    *     the new one in the JavaFX tree.
-    */
-  protected[fxmonad] def replaceControl(newControl: Control[COut]): Unit = {
-    def trackValueOnly(): Unit = {
-      wrappedControl.defaultProperty() = newControl.defaultProperty()
-    }
-
-    def removeWrappedWidgetFromParent(): Unit = {
-      wrappedControl match {
-        case sfx: SFXControl[?, ?, ?] =>
-          sfx.control.parent() match {
-            case pane: Pane =>
-              Platform.runLater {
-                pane.getChildren().remove(sfx.control.delegate)
-              }
-            case _ => ()
-          }
-        case _ => ()
-      }
-    }
-
-    def swapWidget(
-        oldWidget: scalafx.scene.control.Control,
-        newSfx: SFXControl[COut, ?, ?]
-    ): Unit = {
-      oldWidget.parent() match {
-        case pane: Pane =>
-          Platform.runLater {
-            val index = pane.getChildren().indexOf(oldWidget.delegate)
-            if (index > -1) {
-              pane.getChildren().remove(oldWidget.delegate)
-              pane.getChildren().add(index, newSfx.control.delegate)
-            }
-          }
-        case _ => () // Not attached to a Pane; nothing to move in the scene.
-      }
-      setWrappedControl(newSfx)
-    }
-
-    if (!newControl.isInstanceOf[SFXControl[?, ?, ?]]) {
-      removeWrappedWidgetFromParent()
-      setWrappedControl(newControl)
-    } else if (!wrappedControl.isInstanceOf[SFXControl[?, ?, ?]]) {
-      // TODO: no widget to anchor the placement decision on; not implemented.
-      setWrappedControl(newControl)
-    } else {
-      val oldWidget = wrappedControl.asInstanceOf[SFXControl[?, ?, ?]].control
-      val newSfx = newControl.asInstanceOf[SFXControl[COut, ?, ?]]
-      (oldWidget, newSfx.control) match {
-        case (c1: TextField, c2: TextFieldProxy)     => c2.applyChanges(c1)
-        case (c1: CheckBox, c2: CheckBoxProxy)       => c2.applyChanges(c1)
-        case (c1: Slider, c2: SliderProxy)           => c2.applyChanges(c1)
-        case (c1: Label, c2: LabelProxy)             => c2.applyChanges(c1)
-        case (c1: ColorPicker, c2: ColorPickerProxy) => c2.applyChanges(c1)
-        case (c1: RadioButton, c2: RadioButtonProxy) => c2.applyChanges(c1)
-        case (_, proxy) if proxy.isInstanceOf[SFXProxy[?]] =>
-          // A proxy of a different widget class than the live one: can't
-          // replay (wrong shape) and can't attach a proxy node into the live
-          // scene graph either. Track the value only.
-          trackValueOnly()
-        case _ =>
-          swapWidget(oldWidget, newSfx)
-      }
-    }
-  }
+  def isProxy = false
 }

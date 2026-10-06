@@ -1,8 +1,8 @@
 package fxmonad.sfx
 
 import scalafx.scene.control.RadioButton
+import fxmonad.Control
 import scalafx.beans.property.Property
-import scalafx.scene.control.Tooltip
 import fxmonad.sfx.SFXControl
 import fxmonad.PropertyConstructor
 import fxmonad.Conversion
@@ -46,21 +46,29 @@ object RadioButtonControl {
 
 class RadioButtonControl[COut](
     override val defaultProperty: Property[COut, ?],
-    control: RadioButton = RadioButtonProxy()
+    override val control: RadioButton = RadioButtonProxy()
 )(using
     inConversion: Conversion[COut, Boolean],
     outConversion: Conversion[Boolean, COut]
 ) extends SFXControl[COut, Boolean, RadioButton](control)(using
       inConversion,
       outConversion
-    ) {
-  override protected def displayError(errorMsg: String): Unit =
-    control.tooltip() = Tooltip(errorMsg)
-  override protected def clearDisplayedError(): Unit = control.tooltip() = null
+    )
+    with TooltipValidationErrorStrategy[COut, Boolean, RadioButton] {
 
-  control.selected.onChange((_, _, newVal) => updateProperty(newVal))
+  override protected[fxmonad] def updateFrom: PartialFunction[Control[COut], Unit] = {
+    val updateFromProxy: PartialFunction[Control[COut], Unit] = {
+      case source: RadioButtonControl[?]
+          if source.control.isInstanceOf[RadioButtonProxy] =>
+        source.control.asInstanceOf[RadioButtonProxy].applyChanges(control)
+    }
+    updateFromProxy.orElse(super.updateFrom)
+  }
 
-  defaultProperty.onChange((_, _, newVal) => {
+  private val _ =
+    control.selected.onChange((_, _, newVal) => updateProperty(newVal))
+
+  private val _ = defaultProperty.onChange((_, _, _) => {
     inConversion(defaultProperty()) match {
       case Right(nv) =>
         control.selected() = nv

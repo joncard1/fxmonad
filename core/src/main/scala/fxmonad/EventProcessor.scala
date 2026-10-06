@@ -88,7 +88,7 @@ class SimpleEventProcessor[M] extends EventProcessor[M] {
         )
       }
       handlers += handler
-    }
+    }: Unit
 
   override def seal(): Unit =
     synchronized {
@@ -117,5 +117,5 @@ class SimpleEventProcessor[M] extends EventProcessor[M] {
     * failing, so an unhandled message never crashes the UI thread.
     */
   protected def deadLetter(message: M): Unit =
-    System.err.println(s"No handler matched message: $message")
+    System.err.println(s"No handler matched message: ${message.toString()}")
 }

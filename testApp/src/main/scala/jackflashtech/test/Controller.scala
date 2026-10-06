@@ -76,7 +76,7 @@ class Controller extends ReceivesEvents[Msg] {
         )
         if (shouldBeInt > 10) {
           newC.control.styleClass.add("emphasis")
-        } else { // TODO: This doesn't work right when removing a style, because the new control doesn't have the style, so the remove action is by index and reports removing at index -1, but the control to update does have the class and it doesn't get removed. It would be nice if the new control was initialized with the new control. Maybe this function should take a (using control) and any new control automatically wraps the old control? Except I want it to be able to change the control.
+        } else {
           newC.control.styleClass.removeAll("emphasis")
         }
 
