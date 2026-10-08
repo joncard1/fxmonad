@@ -17,7 +17,7 @@ import fxmonad.Control.given
 class ControlContainerReplaceControlSpec extends munit.FunSuite {
 
   override def beforeEach(context: BeforeEach): Unit = {
-    FxToolkit.registerPrimaryStage() : Unit
+    FxToolkit.registerPrimaryStage(): Unit
   }
   override def afterEach(context: AfterEach): Unit = {
     FxToolkit.cleanupStages()

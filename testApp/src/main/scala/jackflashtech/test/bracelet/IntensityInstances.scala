@@ -9,8 +9,7 @@ import jackflashtech.test.bracelet.Intensities._
 object IntensityInstances {
   given Conversion[Intensity, Double] = (x: Intensity) =>
     Right(x.asInt.toDouble)
-  given Conversion[Double, Intensity] = (x: Double) =>
-    x.asIntensity
+  given Conversion[Double, Intensity] = (x: Double) => x.asIntensity
 
   given Conversion[Intensity, String] = (x: Intensity) =>
     Right(x.asInt.toString)

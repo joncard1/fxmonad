@@ -12,7 +12,7 @@ class SimpleEventProcessorSpec extends munit.FunSuite {
   case object B extends TestMsg
 
   override def beforeEach(context: BeforeEach): Unit = {
-    FxToolkit.registerPrimaryStage() : Unit
+    FxToolkit.registerPrimaryStage(): Unit
   }
   override def afterEach(context: AfterEach): Unit = {
     FxToolkit.cleanupStages()

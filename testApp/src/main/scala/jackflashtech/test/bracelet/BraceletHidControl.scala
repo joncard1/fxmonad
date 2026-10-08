@@ -299,11 +299,9 @@ trait BraceletHidControl extends Control[Intensity] {
 
   def reportButtonPress(buttonNumber: ButtonNumber, pressed: Boolean) = {
     if ((buttonNumber == incrementButton) && pressed) {
-      defaultProperty() =
-        defaultProperty() + BraceletHidControl.StepSize
+      defaultProperty() = defaultProperty() + BraceletHidControl.StepSize
     } else if ((buttonNumber == decrementButton) && pressed) {
-      defaultProperty() =
-        defaultProperty() - BraceletHidControl.StepSize
+      defaultProperty() = defaultProperty() - BraceletHidControl.StepSize
     }
   }
 
