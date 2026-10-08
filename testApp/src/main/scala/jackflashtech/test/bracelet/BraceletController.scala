@@ -31,7 +31,7 @@ object BraceletController {
     }
 }
 
-/** Controller for the bracelet test app. Shows 6 intensity displays fed either
+/** Controller for the bracelet test app. Shows 2 intensity displays fed either
   * by the physical "Bracelet" HID device or by an on-screen slider panel,
   * selected via a pair of radio buttons.
   */

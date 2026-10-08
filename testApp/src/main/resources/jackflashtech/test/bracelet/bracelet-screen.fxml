@@ -8,7 +8,6 @@
     <children>
         <VBox spacing="8.0">
             <children>
-                <Button fx:id="temp">Temp</Button>
                 <RadioButton fx:id="braceletRadio" text="Bracelet" toggleGroup="$modeGroup" userData="bracelet" />
                 <RadioButton fx:id="onScreenRadio" text="On screen" toggleGroup="$modeGroup" userData="onscreen" selected="true" />
                 <HBox minWidth="50">
