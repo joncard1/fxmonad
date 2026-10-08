@@ -125,7 +125,7 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
   test(
     "same-class proxy: replays its changes onto the existing live widget instead of swapping it"
   ) {
-    onFx {
+    onFxThenAfterFlush {
       val realTextField = new scalafx.scene.control.TextField()
       val oldWidget = TextFieldControl[Int](5, realTextField)
       val container =
