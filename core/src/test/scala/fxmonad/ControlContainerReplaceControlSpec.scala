@@ -17,7 +17,7 @@ import fxmonad.Control.given
 class ControlContainerReplaceControlSpec extends munit.FunSuite {
 
   override def beforeEach(context: BeforeEach): Unit = {
-    FxToolkit.registerPrimaryStage()
+    FxToolkit.registerPrimaryStage() : Unit
   }
   override def afterEach(context: AfterEach): Unit = {
     FxToolkit.cleanupStages()
@@ -112,7 +112,8 @@ class ControlContainerReplaceControlSpec extends munit.FunSuite {
         ControlContainer[Int](new IntegerProperty(), initialNonWidget)
 
       // TODO: I changed this test. if both the old and the new widget are proxies, there's nothing to track.
-      val newWidgetControl = TextFieldControl[Int](7, new scalafx.scene.control.TextField())
+      val newWidgetControl =
+        TextFieldControl[Int](7, new scalafx.scene.control.TextField())
       container.replaceControl(newWidgetControl)
       assertEquals(container(), 7)
 

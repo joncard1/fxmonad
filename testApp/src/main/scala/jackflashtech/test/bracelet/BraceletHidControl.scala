@@ -17,6 +17,7 @@ import fxmonad.Control.MountContext
 import jackflashtech.test.bracelet.BraceletHidControl.startListener
 import jackflashtech.test.bracelet.BraceletHidControl.stopListener
 import java.util.concurrent.atomic.AtomicReference
+import jackflashtech.test.bracelet.Intensities._
 
 /** This assumes there is only one device of name "Bracelet", and it is the
   * correct device. This should support multiple BraceletHidControl objects
@@ -31,13 +32,17 @@ object BraceletHidControl {
 
     opaque type ButtonNumber = Int
 
-    inline def apply(inline n: Int): ButtonNumber = inline if ((n < 0) || (n > 7)) error("Button numbers must be between 0 and 7") else n
+    inline def apply(inline n: Int): ButtonNumber = inline if (
+      (n < 0) || (n > 7)
+    ) error("Button numbers must be between 0 and 7")
+    else n
 
-    extension (n: ButtonNumber)
-      def asInt: Int = n
+    extension (n: ButtonNumber) def asInt: Int = n
 
     extension (n: Int)
-      def asButtonNumber: Either[String, ButtonNumber] = if ((n < 0) || (n > 7)) Left("Button numbers must be between 0 and 7") else Right(n)
+      def asButtonNumber: Either[String, ButtonNumber] = if ((n < 0) || (n > 7))
+        Left("Button numbers must be between 0 and 7")
+      else Right(n)
   }
 
   private val DataReadInterval = 200
@@ -46,7 +51,7 @@ object BraceletHidControl {
     * property for each report, which should be generated every
     * [[DataReadInterval]] milliseconds when the button is held down.
     */
-  val StepSize: Int = 1
+  val StepSize: Intensity = Intensity(IntensityRange(1))
 
   def stop(): Unit = {
     services.map(services => {
@@ -100,22 +105,22 @@ object BraceletHidControl {
           return this
         }
         // If the report is longer, then the device has written multiple reports since the last DataReadInterval poll. I believe it to be a good assumption that the last byte is the newest data, given what I have seen of hid4java's use ObjectStream to read data from the device, but that assumption underlies this algorithm.
-        //val dataByte = data(data.length - 1)
+        // val dataByte = data(data.length - 1)
         val dataByte = data(0)
         val array = (0 to 7).map { i =>
           ((dataByte >> i) & 1) == 1
         }.toArray
         controls.getAndUpdate(cntrls => {
           for (buttonNumber: ButtonNumber <- cntrls.keySet) {
-              val buttonPressed = array(buttonNumber.asInt)
-              if (buttonPressed) {
-                cntrls
-                  .get(buttonNumber)
-                  .map(control =>
-                    control.reportButtonPress(buttonNumber, buttonPressed)
-                  ): Unit
-              }
-            //}
+            val buttonPressed = array(buttonNumber.asInt)
+            if (buttonPressed) {
+              cntrls
+                .get(buttonNumber)
+                .map(control =>
+                  control.reportButtonPress(buttonNumber, buttonPressed)
+                ): Unit
+            }
+            // }
           }
           cntrls
         })
@@ -196,7 +201,7 @@ object BraceletHidControl {
         throw Exception(
           "Only buttons with numbers 0-7 inclusive can be registered for this device."
         )
-         */
+       */
       listener.controls.getAndUpdate(controls =>
         controls + (buttonNumber -> control)
       ): Unit
@@ -205,8 +210,10 @@ object BraceletHidControl {
     if (services.isEmpty)
       throw new Exception("Failed to find an HidServices object.")
     val control = services.flatMap(services => {
-      val incButton = incrementButton.asButtonNumber.fold(msg => throw Exception(msg), bn => bn)
-      val decButton = decrementButton.asButtonNumber.fold(msg => throw Exception(msg), bn => bn)
+      val incButton = incrementButton.asButtonNumber
+        .fold(msg => throw Exception(msg), bn => bn)
+      val decButton = decrementButton.asButtonNumber
+        .fold(msg => throw Exception(msg), bn => bn)
       val devName = deviceName
       val control = new BraceletHidControl {
         protected val incrementButton = incButton;
@@ -293,10 +300,10 @@ trait BraceletHidControl extends Control[Intensity] {
   def reportButtonPress(buttonNumber: ButtonNumber, pressed: Boolean) = {
     if ((buttonNumber == incrementButton) && pressed) {
       defaultProperty() =
-        Intensity.clamped(defaultProperty().value + BraceletHidControl.StepSize)
+        defaultProperty() + BraceletHidControl.StepSize
     } else if ((buttonNumber == decrementButton) && pressed) {
       defaultProperty() =
-        Intensity.clamped(defaultProperty().value - BraceletHidControl.StepSize)
+        defaultProperty() - BraceletHidControl.StepSize
     }
   }
 

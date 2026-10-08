@@ -17,14 +17,16 @@ object BraceletController {
 
   given PropertyConstructor[DisplayMode] = () =>
     ObjectProperty[DisplayMode](DisplayMode.onscreen)
-  given Conversion[DisplayMode, Object] = (x: DisplayMode) => Right(x.toString())
+  given Conversion[DisplayMode, Object] = (x: DisplayMode) =>
+    Right(x.toString())
   given Conversion[Object, DisplayMode] = (x: Object) =>
     x match {
-      case dm: String => Try { DisplayMode.valueOf(dm) }.toEither match {
-        case Left(e) => Left(e.toString())
-        case Right(x) => Right(x)
-      }
-      case _          =>
+      case dm: String =>
+        Try { DisplayMode.valueOf(dm) }.toEither match {
+          case Left(e)  => Left(e.toString())
+          case Right(x) => Right(x)
+        }
+      case _ =>
         Left(
           s"Was expecting a BraceletApp.DisplayMode, but was some other kind of object. ${x.toString()}"
         )

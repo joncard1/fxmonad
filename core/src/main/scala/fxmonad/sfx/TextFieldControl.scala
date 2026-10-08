@@ -56,7 +56,8 @@ class TextFieldControl[COut](
     )
     with TooltipValidationErrorStrategy[COut, String, TextField] {
 
-  override protected[fxmonad] def updateFrom: PartialFunction[Control[COut], Unit] = {
+  override protected[fxmonad] def updateFrom
+      : PartialFunction[Control[COut], Unit] = {
     val updateFromProxy: PartialFunction[Control[COut], Unit] = {
       case source: TextFieldControl[?]
           if source.control.isInstanceOf[TextFieldProxy] =>

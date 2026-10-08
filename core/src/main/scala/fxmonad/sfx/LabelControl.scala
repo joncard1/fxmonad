@@ -57,10 +57,10 @@ class LabelControl[COut](
     ) {
   // Not bothering to subscribe to property changes because it's a read-only control
 
-  override protected[fxmonad] def updateFrom: PartialFunction[Control[COut], Unit] = {
+  override protected[fxmonad] def updateFrom
+      : PartialFunction[Control[COut], Unit] = {
     val updateFromProxy: PartialFunction[Control[COut], Unit] = {
-      case source: LabelControl[?]
-          if source.control.isInstanceOf[LabelProxy] =>
+      case source: LabelControl[?] if source.control.isInstanceOf[LabelProxy] =>
         source.control.asInstanceOf[LabelProxy].applyChanges(control)
     }
     updateFromProxy.orElse(super.updateFrom)

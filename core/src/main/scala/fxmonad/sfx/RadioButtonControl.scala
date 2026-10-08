@@ -56,7 +56,8 @@ class RadioButtonControl[COut](
     )
     with TooltipValidationErrorStrategy[COut, Boolean, RadioButton] {
 
-  override protected[fxmonad] def updateFrom: PartialFunction[Control[COut], Unit] = {
+  override protected[fxmonad] def updateFrom
+      : PartialFunction[Control[COut], Unit] = {
     val updateFromProxy: PartialFunction[Control[COut], Unit] = {
       case source: RadioButtonControl[?]
           if source.control.isInstanceOf[RadioButtonProxy] =>

@@ -6,7 +6,7 @@ import javafx.{scene => jfxs}
 import scalafx.scene.Scene
 import scalafx.Includes._
 import scala.annotation.experimental
-import fxmonad.{Control, ControlContainer, PropertyConstructor}
+import fxmonad.{Control, ControlContainer}
 import fxmonad.sfx._
 import scala.reflect.ClassTag
 
@@ -56,7 +56,7 @@ object BraceletApp extends JFXApp3 {
     stage.setMinWidth(300)
     stage.setMinHeight(250)
 
-    stage.onCloseRequest = event => {
+    stage.onCloseRequest = _ => {
       BraceletHidControl.stop()
     }
   }

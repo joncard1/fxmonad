@@ -9,7 +9,7 @@ import org.testfx.api.FxToolkit
 class TextFieldControlProxySpec extends munit.FunSuite {
 
   override def beforeEach(context: BeforeEach): Unit = {
-    FxToolkit.registerPrimaryStage();
+    FxToolkit.registerPrimaryStage() : Unit
   }
   override def afterEach(context: AfterEach): Unit = {
     FxToolkit.cleanupStages()

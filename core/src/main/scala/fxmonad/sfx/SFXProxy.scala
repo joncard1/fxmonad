@@ -268,7 +268,8 @@ class ToggleGroupProxy extends sfxc.ToggleGroup with Proxy[ToggleGroup] {
         Platform.runLater {
           control.toggles
             .find(
-              _.getUserData().equals(c.newVal.asInstanceOf[Toggle].getUserData())
+              _.getUserData()
+                .equals(c.newVal.asInstanceOf[Toggle].getUserData())
             )
             .map(_.setSelected(true)): Unit
         }

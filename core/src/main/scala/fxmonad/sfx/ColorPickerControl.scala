@@ -27,7 +27,8 @@ class ColorPickerControl[COut](
     with TooltipValidationErrorStrategy[COut, Color, ColorPicker] {
   import scalafx.Includes._
 
-  override protected[fxmonad] def updateFrom: PartialFunction[Control[COut], Unit] = {
+  override protected[fxmonad] def updateFrom
+      : PartialFunction[Control[COut], Unit] = {
     val updateFromProxy: PartialFunction[Control[COut], Unit] = {
       case source: ColorPickerControl[?]
           if source.control.isInstanceOf[ColorPickerProxy] =>

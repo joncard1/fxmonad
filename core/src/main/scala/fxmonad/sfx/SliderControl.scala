@@ -56,7 +56,8 @@ class SliderControl[COut](
     )
     with TooltipValidationErrorStrategy[COut, Double, Slider] {
 
-  override protected[fxmonad] def updateFrom: PartialFunction[Control[COut], Unit] = {
+  override protected[fxmonad] def updateFrom
+      : PartialFunction[Control[COut], Unit] = {
     val updateFromProxy: PartialFunction[Control[COut], Unit] = {
       case source: SliderControl[?]
           if source.control.isInstanceOf[SliderProxy] =>
