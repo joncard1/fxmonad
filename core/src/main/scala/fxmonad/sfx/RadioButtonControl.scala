@@ -1,67 +1,67 @@
 package fxmonad.sfx
 
-import scalafx.scene.control.CheckBox
+import scalafx.scene.control.RadioButton
 import fxmonad.Control
 import scalafx.beans.property.Property
 import fxmonad.sfx.SFXControl
 import fxmonad.PropertyConstructor
 import fxmonad.Conversion
 
-object CheckBoxControl {
+object RadioButtonControl {
   def apply[A: PropertyConstructor]()(using
       inConversion: Conversion[A, Boolean],
       outConversion: Conversion[Boolean, A]
-  ): CheckBoxControl[A] = {
+  ): RadioButtonControl[A] = {
     val constructor = summon[PropertyConstructor[A]]
-    new CheckBoxControl(constructor())
+    new RadioButtonControl(constructor())
   }
   def apply[A: PropertyConstructor](initialValue: A)(using
       inConversion: Conversion[A, Boolean],
       outConversion: Conversion[Boolean, A]
   ) = {
     val constructor = summon[PropertyConstructor[A]]
-    val newC = new CheckBoxControl(constructor())
+    val newC = new RadioButtonControl(constructor())
     newC() = initialValue
     newC
   }
 
-  def apply[A: PropertyConstructor](control: CheckBox)(using
+  def apply[A: PropertyConstructor](control: RadioButton)(using
       inConversion: Conversion[A, Boolean],
       outConversion: Conversion[Boolean, A]
-  ): CheckBoxControl[A] = {
+  ): RadioButtonControl[A] = {
     val constructor = summon[PropertyConstructor[A]]
-    new CheckBoxControl(constructor(), control)
+    new RadioButtonControl(constructor(), control)
   }
 
-  def apply[A: PropertyConstructor](initialValue: A, control: CheckBox)(using
+  def apply[A: PropertyConstructor](initialValue: A, control: RadioButton)(using
       inConversion: Conversion[A, Boolean],
       outConversion: Conversion[Boolean, A]
   ) = {
     val constructor = summon[PropertyConstructor[A]]
-    val newC = new CheckBoxControl(constructor(), control)
+    val newC = new RadioButtonControl(constructor(), control)
     newC() = initialValue
     newC
   }
 }
 
-class CheckBoxControl[COut](
+class RadioButtonControl[COut](
     override val defaultProperty: Property[COut, ?],
-    override val control: CheckBox = CheckBoxProxy()
+    override val control: RadioButton = RadioButtonProxy()
 )(using
     inConversion: Conversion[COut, Boolean],
     outConversion: Conversion[Boolean, COut]
-) extends SFXControl[COut, Boolean, CheckBox](control)(using
+) extends SFXControl[COut, Boolean, RadioButton](control)(using
       inConversion,
       outConversion
     )
-    with TooltipValidationErrorStrategy[COut, Boolean, CheckBox] {
+    with TooltipValidationErrorStrategy[COut, Boolean, RadioButton] {
 
   override protected[fxmonad] def updateFrom
       : PartialFunction[Control[COut], Unit] = {
     val updateFromProxy: PartialFunction[Control[COut], Unit] = {
-      case source: CheckBoxControl[?]
-          if source.control.isInstanceOf[CheckBoxProxy] =>
-        source.control.asInstanceOf[CheckBoxProxy].applyChanges(control)
+      case source: RadioButtonControl[?]
+          if source.control.isInstanceOf[RadioButtonProxy] =>
+        source.control.asInstanceOf[RadioButtonProxy].applyChanges(control)
     }
     updateFromProxy.orElse(super.updateFrom)
   }

@@ -1,6 +1,7 @@
 package fxmonad.sfx
 
 import scalafx.scene.control.Label
+import fxmonad.Control
 import fxmonad.sfx.SFXControl
 import scalafx.beans.property.Property
 import fxmonad.PropertyConstructor
@@ -15,11 +16,12 @@ object LabelControl {
     new LabelControl(constructor())
   }
   def apply[A: PropertyConstructor](initialValue: A)(using
-      pc: PropertyConstructor[A],
       inConversion: Conversion[A, String],
       outConversion: Conversion[String, A]
   ): LabelControl[A] = {
-    val newC = new LabelControl(pc())(using inConversion, outConversion)
+    val constructor = summon[PropertyConstructor[A]]
+    val newC =
+      new LabelControl(constructor())(using inConversion, outConversion)
     newC() = initialValue
     newC
   }
@@ -33,11 +35,11 @@ object LabelControl {
   }
 
   def apply[A: PropertyConstructor](initialValue: A, control: Label)(using
-      pc: PropertyConstructor[A],
       inConversion: Conversion[A, String],
       outConversion: Conversion[String, A]
   ): LabelControl[A] = {
-    val newC = new LabelControl(pc(), control)
+    val constructor = summon[PropertyConstructor[A]]
+    val newC = new LabelControl(constructor(), control)
     newC() = initialValue
     newC
   }
@@ -45,7 +47,7 @@ object LabelControl {
 
 class LabelControl[COut](
     override val defaultProperty: Property[COut, ?],
-    control: Label = new LabelProxy()
+    override val control: Label = new LabelProxy()
 )(using
     inConversion: Conversion[COut, String],
     outConversion: Conversion[String, COut]
@@ -55,10 +57,19 @@ class LabelControl[COut](
     ) {
   // Not bothering to subscribe to property changes because it's a read-only control
 
-  override protected[fxmonad] def clearError(): Unit = {}
-  override protected[fxmonad] def showError(errorMsg: String): Unit = {}
+  override protected[fxmonad] def updateFrom
+      : PartialFunction[Control[COut], Unit] = {
+    val updateFromProxy: PartialFunction[Control[COut], Unit] = {
+      case source: LabelControl[?] if source.control.isInstanceOf[LabelProxy] =>
+        source.control.asInstanceOf[LabelProxy].applyChanges(control)
+    }
+    updateFromProxy.orElse(super.updateFrom)
+  }
 
-  defaultProperty.onChange((_, _, newVal) => {
+  override def clearError(): Unit = {}
+  override def showError(errorMsg: String): Unit = {}
+
+  private val _ = defaultProperty.onChange((_, _, _) => {
     inConversion(defaultProperty()) match {
       case Right(null) =>
         showError("This control was given a value that converted to null")

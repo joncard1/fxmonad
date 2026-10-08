@@ -2,8 +2,7 @@ package fxmonad.sfx
 
 import scalafx.beans.property.Property
 import scalafx.scene.control.TextField
-import scalafx.scene.control.Tooltip
-import scalafx.application.Platform
+import fxmonad.Control
 import fxmonad.sfx.SFXControl
 import fxmonad.Conversion
 import fxmonad.PropertyConstructor
@@ -47,32 +46,30 @@ object TextFieldControl {
 
 class TextFieldControl[COut](
     override val defaultProperty: Property[COut, ?],
-    control: TextField = new TextFieldProxy()
+    override val control: TextField = new TextFieldProxy()
 )(using
     inConversion: Conversion[COut, String],
     outConversion: Conversion[String, COut]
 ) extends SFXControl[COut, String, TextField](control)(using
       inConversion,
       outConversion
-    ) {
+    )
+    with TooltipValidationErrorStrategy[COut, String, TextField] {
 
-  control.text.onChange((_, _, newVal) => updateProperty(newVal))
-
-  override protected[fxmonad] def clearError(): Unit = {
-    control.tooltip() = null
-    Platform.runLater {
-      control.styleClass.removeAll("error")
+  override protected[fxmonad] def updateFrom
+      : PartialFunction[Control[COut], Unit] = {
+    val updateFromProxy: PartialFunction[Control[COut], Unit] = {
+      case source: TextFieldControl[?]
+          if source.control.isInstanceOf[TextFieldProxy] =>
+        source.control.asInstanceOf[TextFieldProxy].applyChanges(control)
     }
+    updateFromProxy.orElse(super.updateFrom)
   }
 
-  override protected[fxmonad] def showError(errorMsg: String): Unit = {
-    control.tooltip() = Tooltip(errorMsg)
-    Platform.runLater {
-      control.styleClass.add("error")
-    }
-  }
+  private val _ =
+    control.text.onChange((_, _, newVal) => updateProperty(newVal))
 
-  defaultProperty.onChange((_, _, newVal) => {
+  private val _ = defaultProperty.onChange((_, _, _) => {
     inConversion(defaultProperty()) match {
       case Right(null) =>
         showError("Property was set to null")

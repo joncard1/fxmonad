@@ -1,6 +1,5 @@
 package fxmonad
 
-import scalafx.application.JFXApp3
 import scalafx.application.Platform
 import java.util.concurrent.CountDownLatch
 import fxmonad.sfx.TextFieldProxy
@@ -10,7 +9,7 @@ import org.testfx.api.FxToolkit
 class TextFieldControlProxySpec extends munit.FunSuite {
 
   override def beforeEach(context: BeforeEach): Unit = {
-    FxToolkit.registerPrimaryStage();
+    FxToolkit.registerPrimaryStage(): Unit
   }
   override def afterEach(context: AfterEach): Unit = {
     FxToolkit.cleanupStages()

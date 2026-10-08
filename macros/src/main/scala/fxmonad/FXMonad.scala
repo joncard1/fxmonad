@@ -1,93 +1,8 @@
 package fxmonad
 
-import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.MacroAnnotation
 import scala.annotation.experimental
 import scala.quoted.*
-import scala.annotation.tailrec
-import fxmonad.sfx._
-import scalafx.beans.property.{
-  BooleanProperty,
-  DoubleProperty,
-  IntegerProperty,
-  StringProperty
-}
-
-object FXMonad {
-  import fxmonad.Control.given
-
-  val lookups: AtomicReference[Map[Class[?], List[
-    PartialFunction[javafx.scene.control.Control, Control[?]]
-  ]]] = AtomicReference(
-    Map(
-      (classOf[String]) -> List({
-        case c: javafx.scene.control.TextField =>
-          ControlContainer(
-            new StringProperty(),
-            TextFieldControl[String](scalafx.scene.control.TextField(c))
-          )
-        case c: javafx.scene.control.CheckBox =>
-          ControlContainer(
-            new StringProperty(),
-            CheckBoxControl[String](scalafx.scene.control.CheckBox(c))
-          )
-      }),
-      (classOf[Int]) -> List({
-        case c: javafx.scene.control.CheckBox =>
-          ControlContainer(
-            new IntegerProperty(),
-            CheckBoxControl(scalafx.scene.control.CheckBox(c))
-          )
-        case c: javafx.scene.control.Slider =>
-          ControlContainer(
-            new IntegerProperty(),
-            SliderControl(scalafx.scene.control.Slider(c))
-          )
-        case c: javafx.scene.control.TextField =>
-          ControlContainer(
-            new IntegerProperty(),
-            TextFieldControl(scalafx.scene.control.TextField(c))
-          )
-      }),
-      (classOf[Boolean]) -> List({ case c: javafx.scene.control.CheckBox =>
-        ControlContainer(
-          new BooleanProperty(),
-          CheckBoxControl(scalafx.scene.control.CheckBox(c))
-        )
-      }),
-      (classOf[Double]) -> List({ case c: javafx.scene.control.Slider =>
-        ControlContainer(
-          new DoubleProperty(),
-          SliderControl(scalafx.scene.control.Slider(c))
-        )
-      })
-    )
-  )
-
-  def lookupControl(
-      typ: Class[?],
-      control: javafx.scene.control.Control
-  ): Control[?] = {
-    @tailrec
-    def lookupInternal(
-        control: javafx.scene.control.Control,
-        lookupList: List[
-          PartialFunction[javafx.scene.control.Control, Control[?]]
-        ]
-    ): Option[Control[?]] =
-      lookupList match {
-        case Nil          => None
-        case head :: tail =>
-          if (head.isDefinedAt(control)) Some(head(control))
-          else lookupInternal(control, tail)
-      }
-
-    lookupInternal(control, lookups.get.getOrElse(typ, List())) match {
-      case None    => throw new Exception("Failed to find proper control")
-      case Some(c) => c
-    }
-  }
-}
 
 @experimental
 class FXMonad(id: String) extends MacroAnnotation {
@@ -125,7 +40,7 @@ class FXMonad(id: String) extends MacroAnnotation {
         val typeTree = TypeTree.of(using annotationSymbol.typeRef.asType)
         val annotationConstructor = annotationSymbol.primaryConstructor
         val jfxControlTypeSymbol =
-          Symbol.classSymbol("javafx.scene.control.Control")
+          Symbol.classSymbol("javafx.scene.Node")
         val jfxControlSymbol = Symbol
           .newVal(
             Symbol.spliceOwner,
@@ -161,7 +76,7 @@ class FXMonad(id: String) extends MacroAnnotation {
                   Some('{
                     if (
                       ${
-                        jfxControlRef.asExprOf[javafx.scene.control.Control]
+                        jfxControlRef.asExprOf[javafx.scene.Node]
                       } == null
                     )
                       throw Exception(
@@ -169,10 +84,10 @@ class FXMonad(id: String) extends MacroAnnotation {
                           Expr(id)
                         }
                       )
-                    FXMonad.lookupControl(
+                    Control.lookupControl(
                       ${ classOfTerm.asExprOf[Class[?]] },
                       ${
-                        jfxControlRef.asExprOf[javafx.scene.control.Control]
+                        jfxControlRef.asExprOf[javafx.scene.Node]
                       }
                     )
                   }.asTerm)

@@ -2,9 +2,8 @@ package fxmonad.sfx
 
 import scalafx.beans.property.Property
 import scalafx.scene.control.Slider
+import fxmonad.Control
 import fxmonad.sfx.SFXControl
-import scalafx.application.Platform
-import scalafx.scene.control.Tooltip
 import fxmonad.PropertyConstructor
 import fxmonad.Conversion
 
@@ -47,30 +46,31 @@ object SliderControl {
 
 class SliderControl[COut](
     override val defaultProperty: Property[COut, ?],
-    control: Slider = new SliderProxy()
+    override val control: Slider = new SliderProxy()
 )(using
     inConversion: Conversion[COut, Double],
     outConversion: Conversion[Double, COut]
 ) extends SFXControl[COut, Double, Slider](control)(using
       inConversion,
       outConversion
-    ) {
-  control.value.onChange((_, _, newVal) => updateProperty(newVal.doubleValue()))
+    )
+    with TooltipValidationErrorStrategy[COut, Double, Slider] {
 
-  override protected[fxmonad] def clearError(): Unit = {
-    control.tooltip() = null
-    Platform.runLater {
-      control.styleClass.removeAll("error")
+  override protected[fxmonad] def updateFrom
+      : PartialFunction[Control[COut], Unit] = {
+    val updateFromProxy: PartialFunction[Control[COut], Unit] = {
+      case source: SliderControl[?]
+          if source.control.isInstanceOf[SliderProxy] =>
+        source.control.asInstanceOf[SliderProxy].applyChanges(control)
     }
-  }
-  override protected[fxmonad] def showError(errorMsg: String): Unit = {
-    control.tooltip() = Tooltip(errorMsg)
-    Platform.runLater {
-      control.styleClass.add("error")
-    }
+    updateFromProxy.orElse(super.updateFrom)
   }
 
-  defaultProperty.onChange((_, _, newVal) => {
+  private val _ = control.value.onChange((_, _, newVal) =>
+    updateProperty(newVal.doubleValue())
+  )
+
+  private val _ = defaultProperty.onChange((_, _, _) => {
     inConversion(defaultProperty()) match {
       case Right(nv) =>
         control.value() = nv

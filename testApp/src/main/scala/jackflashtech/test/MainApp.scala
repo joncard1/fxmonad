@@ -6,7 +6,7 @@ import javafx.{scene => jfxs}
 import scalafx.scene.Scene
 import scalafx.Includes._
 import scala.annotation.experimental
-import fxmonad.FXMonad
+import fxmonad.Control
 import scalafx.scene.paint.Color
 import fxmonad.sfx._
 
@@ -16,12 +16,13 @@ import fxmonad.sfx._
 @experimental
 object MainApp extends JFXApp3 {
   override def start(): Unit = {
-    FXMonad.lookups.getAndUpdate(lookups => {
-      lookups + (classOf[Color] -> ({
-        case c: javafx.scene.control.ColorPicker =>
-          ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
-      } :: lookups.getOrElse(classOf[Color], List())))
-    })
+    Control.registerControl(
+      classOf[Color],
+      { case c: javafx.scene.control.ColorPicker =>
+        ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
+      }
+    )
+
     stage = new JFXApp3.PrimaryStage {
       val viewClass = getClass.getResource("main-screen.fxml")
       println(viewClass.toString())
@@ -33,5 +34,8 @@ object MainApp extends JFXApp3 {
 
       }
     }
+
+    stage.setMinWidth(500)
+    stage.setMinHeight(250)
   }
 }
