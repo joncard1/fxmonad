@@ -17,6 +17,7 @@ import sfxc.RadioButton
 import scalafx.scene.paint.Color
 import sfxc.ToggleGroup
 import sfxc.Toggle
+import scalafx.application.Platform
 
 case class Change(propertyName: String, oldVal: Any, newVal: Any)
 
@@ -77,15 +78,23 @@ sealed trait SFXProxy[A <: sfxc.Control] extends Proxy[A] { this: A =>
 
   protected def applyChangesPF(control: A): PartialFunction[Change, Unit] = {
     case c @ Change("prefHeight", _, _) =>
-      control.prefHeight.set(c.newVal.asInstanceOf[Double])
+      Platform.runLater {
+        control.prefHeight.set(c.newVal.asInstanceOf[Double])
+      }
     case c @ Change("style", _, _) =>
-      control.style.set(c.newVal.asInstanceOf[String])
+      Platform.runLater {
+        control.style.set(c.newVal.asInstanceOf[String])
+      }
     case c @ Change("styleClass", _, _) =>
       c.newVal.asInstanceOf[ObservableBuffer.Change[String]] match {
         case Add(position, added) =>
-          control.styleClass.insertAll(position, added)
+          Platform.runLater {
+            control.styleClass.insertAll(position, added)
+          }
         case Remove(position, removed) =>
-          control.styleClass.remove(position, removed.size)
+          Platform.runLater {
+            control.styleClass.remove(position, removed.size)
+          }
         case Reorder(start, end, permutation) => ???
         case Update(from, to)                 => ???
       }
@@ -147,8 +156,10 @@ class TextFieldProxy extends TextField with SFXProxy[TextField] {
   ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("text", _, _) =>
-        control.text() = c.newVal.asInstanceOf[String]
-        println(s"Control: ${control.text()}")
+        Platform.runLater {
+          control.text() = c.newVal.asInstanceOf[String]
+          println(s"Control: ${control.text()}")
+        }
     }
     localChange.orElse(super.applyChangesPF(control))
   }
@@ -164,7 +175,9 @@ class CheckBoxProxy extends CheckBox with SFXProxy[CheckBox] {
   ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("selected", _, _) =>
-        control.selected() = c.newVal.asInstanceOf[Boolean]
+        Platform.runLater {
+          control.selected() = c.newVal.asInstanceOf[Boolean]
+        }
     }
     localChange.orElse(super.applyChangesPF(control))
   }
@@ -180,7 +193,9 @@ class RadioButtonProxy extends RadioButton with SFXProxy[RadioButton] {
   ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("selected", _, _) =>
-        control.selected() = c.newVal.asInstanceOf[Boolean]
+        Platform.runLater {
+          control.selected() = c.newVal.asInstanceOf[Boolean]
+        }
     }
     localChange.orElse(super.applyChangesPF(control))
   }
@@ -196,7 +211,9 @@ class SliderProxy extends Slider with SFXProxy[Slider] {
   ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("value", _, _) =>
-        control.value() = c.newVal.asInstanceOf[Double]
+        Platform.runLater {
+          control.value() = c.newVal.asInstanceOf[Double]
+        }
     }
     localChange.orElse(super.applyChangesPF(control))
   }
@@ -212,7 +229,9 @@ class LabelProxy extends Label with SFXProxy[Label] {
   ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("text", _, _) =>
-        control.text() = c.newVal.asInstanceOf[String]
+        Platform.runLater {
+          control.text() = c.newVal.asInstanceOf[String]
+        }
     }
     localChange.orElse(super.applyChangesPF(control))
   }
@@ -228,7 +247,9 @@ class ColorPickerProxy extends sfxc.ColorPicker with SFXProxy[ColorPicker] {
   ): PartialFunction[Change, Unit] = {
     val localChange: PartialFunction[Change, Unit] = {
       case c @ Change("value", _, _) =>
-        control.value() = c.newVal.asInstanceOf[Color]
+        Platform.runLater {
+          control.value() = c.newVal.asInstanceOf[Color]
+        }
     }
     localChange.orElse(super.applyChangesPF(control))
   }
@@ -244,11 +265,13 @@ class ToggleGroupProxy extends sfxc.ToggleGroup with Proxy[ToggleGroup] {
   override def applyChanges(control: ToggleGroup): Unit = {
     this.changes.reverse.map(_ match {
       case c @ Change("selectedToggle", _, _) =>
-        control.toggles
-          .find(
-            _.getUserData().equals(c.newVal.asInstanceOf[Toggle].getUserData())
-          )
-          .map(_.setSelected(true)): Unit
+        Platform.runLater {
+          control.toggles
+            .find(
+              _.getUserData().equals(c.newVal.asInstanceOf[Toggle].getUserData())
+            )
+            .map(_.setSelected(true)): Unit
+        }
       case c =>
         println(
           s"Failed to match change ${c.toString()}. Probably not implemented."

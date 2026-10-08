@@ -24,6 +24,21 @@ import java.util.concurrent.atomic.AtomicReference
   * devices.
   */
 object BraceletHidControl {
+  import ButtonNumber._
+
+  object ButtonNumber {
+    import scala.compiletime.error
+
+    opaque type ButtonNumber = Int
+
+    inline def apply(inline n: Int): ButtonNumber = inline if ((n < 0) || (n > 7)) error("Button numbers must be between 0 and 7") else n
+
+    extension (n: ButtonNumber)
+      def asInt: Int = n
+
+    extension (n: Int)
+      def asButtonNumber: Either[String, ButtonNumber] = if ((n < 0) || (n > 7)) Left("Button numbers must be between 0 and 7") else Right(n)
+  }
 
   private val DataReadInterval = 200
 
@@ -70,7 +85,7 @@ object BraceletHidControl {
       InactiveState()
     )
 
-    var controls: AtomicReference[Map[Int, BraceletHidControl]] =
+    var controls: AtomicReference[Map[ButtonNumber, BraceletHidControl]] =
       AtomicReference(Map())
 
     trait BraceletHidState {
@@ -85,18 +100,14 @@ object BraceletHidControl {
           return this
         }
         // If the report is longer, then the device has written multiple reports since the last DataReadInterval poll. I believe it to be a good assumption that the last byte is the newest data, given what I have seen of hid4java's use ObjectStream to read data from the device, but that assumption underlies this algorithm.
-        val dataByte = data(data.length - 1)
+        //val dataByte = data(data.length - 1)
+        val dataByte = data(0)
         val array = (0 to 7).map { i =>
           ((dataByte >> i) & 1) == 1
         }.toArray
         controls.getAndUpdate(cntrls => {
-          for (buttonNumber <- cntrls.keySet) {
-            if ((buttonNumber < 0) || (buttonNumber >= array.length)) {
-              println(
-                s"A button number $buttonNumber was registerd with the HID controller; this is not compatible with the hardware device."
-              )
-            } else {
-              val buttonPressed = array(buttonNumber)
+          for (buttonNumber: ButtonNumber <- cntrls.keySet) {
+              val buttonPressed = array(buttonNumber.asInt)
               if (buttonPressed) {
                 cntrls
                   .get(buttonNumber)
@@ -104,7 +115,7 @@ object BraceletHidControl {
                     control.reportButtonPress(buttonNumber, buttonPressed)
                   ): Unit
               }
-            }
+            //}
           }
           cntrls
         })
@@ -178,13 +189,14 @@ object BraceletHidControl {
 
     def registerButtonNumber(
         listener: BraceletServiceListener,
-        buttonNumber: Int,
+        buttonNumber: ButtonNumber,
         control: BraceletHidControl
     ): Unit = {
-      if ((buttonNumber < 0) || (buttonNumber > 7))
+      /* if ((buttonNumber < 0) || (buttonNumber > 7))
         throw Exception(
           "Only buttons with numbers 0-7 inclusive can be registered for this device."
         )
+         */
       listener.controls.getAndUpdate(controls =>
         controls + (buttonNumber -> control)
       ): Unit
@@ -193,8 +205,8 @@ object BraceletHidControl {
     if (services.isEmpty)
       throw new Exception("Failed to find an HidServices object.")
     val control = services.flatMap(services => {
-      val incButton = incrementButton
-      val decButton = decrementButton
+      val incButton = incrementButton.asButtonNumber.fold(msg => throw Exception(msg), bn => bn)
+      val decButton = decrementButton.asButtonNumber.fold(msg => throw Exception(msg), bn => bn)
       val devName = deviceName
       val control = new BraceletHidControl {
         protected val incrementButton = incButton;
@@ -213,15 +225,15 @@ object BraceletHidControl {
                 .asScala
                 .find(_.getProduct().equals(deviceName))
                 .fold({
-                  registerButtonNumber(listener, incrementButton, control)
-                  registerButtonNumber(listener, decrementButton, control)
+                  registerButtonNumber(listener, incButton, control)
+                  registerButtonNumber(listener, decButton, control)
                   Some(control)
                 })(device => {
                   val isOpen = openDevice(device)
 
                   if (isOpen) {
-                    registerButtonNumber(listener, incrementButton, control)
-                    registerButtonNumber(listener, decrementButton, control)
+                    registerButtonNumber(listener, incButton, control)
+                    registerButtonNumber(listener, decButton, control)
                     listener.state.set(listener.ActiveState())
                     Some(control)
                   } else {
@@ -231,8 +243,8 @@ object BraceletHidControl {
               services.addHidServicesListener(listener)
               listener
             })(listener => {
-              registerButtonNumber(listener, incrementButton, control)
-              registerButtonNumber(listener, decrementButton, control)
+              registerButtonNumber(listener, incButton, control)
+              registerButtonNumber(listener, decButton, control)
               listener
             }))
         )
@@ -261,9 +273,11 @@ object BraceletHidControl {
 // TODO: Interesting question: when it's dismounted, stop listening to the HID data? This suggests that controls may need to handle their own dismounting, which may "solve" the fact that ControlContainer objects need to know a lot about JavaFX, etc., which it would be better if it didn't.
 // TODO: Does this impact the ControlPane idea? Being able to dismount themselves doesn't imply knowing enough context to mount themselves, especially when they may be re-mounting themselves into a new location.
 trait BraceletHidControl extends Control[Intensity] {
+  import BraceletHidControl.ButtonNumber._
+
   protected val deviceName: String
-  protected val incrementButton: Int
-  protected val decrementButton: Int
+  protected val incrementButton: ButtonNumber
+  protected val decrementButton: ButtonNumber
 
   override def showError(errorMsg: String): Unit = {
     println("Bracelet HID was instructed to show an error.")
@@ -276,7 +290,7 @@ trait BraceletHidControl extends Control[Intensity] {
   override val defaultProperty: Property[Intensity, ?] =
     ObjectProperty[Intensity](Intensity.min)
 
-  def reportButtonPress(buttonNumber: Int, pressed: Boolean) = {
+  def reportButtonPress(buttonNumber: ButtonNumber, pressed: Boolean) = {
     if ((buttonNumber == incrementButton) && pressed) {
       defaultProperty() =
         Intensity.clamped(defaultProperty().value + BraceletHidControl.StepSize)
