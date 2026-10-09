@@ -85,6 +85,130 @@ sealed trait SFXProxy[A <: sfxc.Control] extends Proxy[A] { this: A =>
       Platform.runLater {
         control.style.set(c.newVal.asInstanceOf[String])
       }
+    case c @ Change("prefWidth", _, _) =>
+      Platform.runLater {
+        control.prefWidth.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("minWidth", _, _) =>
+      Platform.runLater {
+        control.minWidth.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("minHeight", _, _) =>
+      Platform.runLater {
+        control.minHeight.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("maxWidth", _, _) =>
+      Platform.runLater {
+        control.maxWidth.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("maxHeight", _, _) =>
+      Platform.runLater {
+        control.maxHeight.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("opacity", _, _) =>
+      Platform.runLater {
+        control.opacity.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("layoutX", _, _) =>
+      Platform.runLater {
+        control.layoutX.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("layoutY", _, _) =>
+      Platform.runLater {
+        control.layoutY.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("rotate", _, _) =>
+      Platform.runLater {
+        control.rotate.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("scaleX", _, _) =>
+      Platform.runLater {
+        control.scaleX.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("scaleY", _, _) =>
+      Platform.runLater {
+        control.scaleY.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("scaleZ", _, _) =>
+      Platform.runLater {
+        control.scaleZ.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("translateX", _, _) =>
+      Platform.runLater {
+        control.translateX.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("translateY", _, _) =>
+      Platform.runLater {
+        control.translateY.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("translateZ", _, _) =>
+      Platform.runLater {
+        control.translateZ.set(c.newVal.asInstanceOf[Number].doubleValue())
+      }
+    case c @ Change("visible", _, _) =>
+      Platform.runLater {
+        control.visible.set(c.newVal.asInstanceOf[java.lang.Boolean].booleanValue())
+      }
+    case c @ Change("disable", _, _) =>
+      Platform.runLater {
+        control.disable.set(c.newVal.asInstanceOf[java.lang.Boolean].booleanValue())
+      }
+    case c @ Change("managed", _, _) =>
+      Platform.runLater {
+        control.managed.set(c.newVal.asInstanceOf[java.lang.Boolean].booleanValue())
+      }
+    case c @ Change("mouseTransparent", _, _) =>
+      Platform.runLater {
+        control.mouseTransparent.set(c.newVal.asInstanceOf[java.lang.Boolean].booleanValue())
+      }
+    case c @ Change("pickOnBounds", _, _) =>
+      Platform.runLater {
+        control.pickOnBounds.set(c.newVal.asInstanceOf[java.lang.Boolean].booleanValue())
+      }
+    case c @ Change("focusTraversable", _, _) =>
+      Platform.runLater {
+        control.focusTraversable.set(c.newVal.asInstanceOf[java.lang.Boolean].booleanValue())
+      }
+    case c @ Change("snapToPixel", _, _) =>
+      Platform.runLater {
+        control.snapToPixel.set(c.newVal.asInstanceOf[java.lang.Boolean].booleanValue())
+      }
+    case c @ Change("cache", _, _) =>
+      Platform.runLater {
+        control.cache.set(c.newVal.asInstanceOf[java.lang.Boolean].booleanValue())
+      }
+    case c @ Change("id", _, _) =>
+      Platform.runLater {
+        control.id.set(c.newVal.asInstanceOf[String])
+      }
+    case c @ Change("padding", _, _) =>
+      Platform.runLater {
+        control.delegate.paddingProperty().set(c.newVal.asInstanceOf[javafx.geometry.Insets])
+      }
+    case c @ Change("tooltip", _, _) =>
+      Platform.runLater {
+        control.delegate.tooltipProperty().set(c.newVal.asInstanceOf[javafx.scene.control.Tooltip])
+      }
+    case c @ Change("contextMenu", _, _) =>
+      Platform.runLater {
+        control.delegate.contextMenuProperty().set(c.newVal.asInstanceOf[javafx.scene.control.ContextMenu])
+      }
+    case c @ Change("cursor", _, _) =>
+      Platform.runLater {
+        control.delegate.cursorProperty().set(c.newVal.asInstanceOf[javafx.scene.Cursor])
+      }
+    case c @ Change("effect", _, _) =>
+      Platform.runLater {
+        control.delegate.effectProperty().set(c.newVal.asInstanceOf[javafx.scene.effect.Effect])
+      }
+    case c @ Change("clip", _, _) =>
+      Platform.runLater {
+        control.delegate.clipProperty().set(c.newVal.asInstanceOf[javafx.scene.Node])
+      }
+    case c @ Change("cacheHint", _, _) =>
+      Platform.runLater {
+        control.delegate.cacheHintProperty().set(c.newVal.asInstanceOf[javafx.scene.CacheHint])
+      }
     case c @ Change("styleClass", _, _) =>
       c.newVal.asInstanceOf[ObservableBuffer.Change[String]] match {
         case Add(position, added) =>
@@ -129,6 +253,187 @@ sealed trait SFXProxy[A <: sfxc.Control] extends Proxy[A] { this: A =>
       .reverse
       .toList ::: changes
   })
+
+  private val _ = prefWidth.onChange((_, oldVal, newVal) => {
+    changes = Change("prefWidth", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = minWidth.onChange((_, oldVal, newVal) => {
+    changes = Change("minWidth", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = minHeight.onChange((_, oldVal, newVal) => {
+    changes = Change("minHeight", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = maxWidth.onChange((_, oldVal, newVal) => {
+    changes = Change("maxWidth", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = maxHeight.onChange((_, oldVal, newVal) => {
+    changes = Change("maxHeight", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = opacity.onChange((_, oldVal, newVal) => {
+    changes = Change("opacity", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = layoutX.onChange((_, oldVal, newVal) => {
+    changes = Change("layoutX", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = layoutY.onChange((_, oldVal, newVal) => {
+    changes = Change("layoutY", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = rotate.onChange((_, oldVal, newVal) => {
+    changes = Change("rotate", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = scaleX.onChange((_, oldVal, newVal) => {
+    changes = Change("scaleX", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = scaleY.onChange((_, oldVal, newVal) => {
+    changes = Change("scaleY", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = scaleZ.onChange((_, oldVal, newVal) => {
+    changes = Change("scaleZ", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = translateX.onChange((_, oldVal, newVal) => {
+    changes = Change("translateX", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = translateY.onChange((_, oldVal, newVal) => {
+    changes = Change("translateY", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = translateZ.onChange((_, oldVal, newVal) => {
+    changes = Change("translateZ", oldVal.doubleValue(), newVal.doubleValue()) :: changes
+  })
+
+  private val _ = visible.onChange((_, oldVal, newVal) => {
+    changes = Change("visible", oldVal, newVal) :: changes
+  })
+
+  private val _ = disable.onChange((_, oldVal, newVal) => {
+    changes = Change("disable", oldVal, newVal) :: changes
+  })
+
+  private val _ = managed.onChange((_, oldVal, newVal) => {
+    changes = Change("managed", oldVal, newVal) :: changes
+  })
+
+  private val _ = mouseTransparent.onChange((_, oldVal, newVal) => {
+    changes = Change("mouseTransparent", oldVal, newVal) :: changes
+  })
+
+  private val _ = pickOnBounds.onChange((_, oldVal, newVal) => {
+    changes = Change("pickOnBounds", oldVal, newVal) :: changes
+  })
+
+  private val _ = focusTraversable.onChange((_, oldVal, newVal) => {
+    changes = Change("focusTraversable", oldVal, newVal) :: changes
+  })
+
+  private val _ = snapToPixel.onChange((_, oldVal, newVal) => {
+    changes = Change("snapToPixel", oldVal, newVal) :: changes
+  })
+
+  private val _ = cache.onChange((_, oldVal, newVal) => {
+    changes = Change("cache", oldVal, newVal) :: changes
+  })
+
+  private val _ = id.onChange((_, oldVal, newVal) => {
+    changes = Change("id", oldVal, newVal) :: changes
+  })
+
+  private val _ = delegate.paddingProperty().addListener(
+    new javafx.beans.value.ChangeListener[AnyRef] {
+      override def changed(
+          obs: javafx.beans.value.ObservableValue[? <: AnyRef],
+          oldVal: AnyRef,
+          newVal: AnyRef
+      ): Unit = changes = Change("padding", oldVal, newVal) :: changes
+    }
+  )
+
+  private val _ = delegate.tooltipProperty().addListener(
+    new javafx.beans.value.ChangeListener[AnyRef] {
+      override def changed(
+          obs: javafx.beans.value.ObservableValue[? <: AnyRef],
+          oldVal: AnyRef,
+          newVal: AnyRef
+      ): Unit = changes = Change("tooltip", oldVal, newVal) :: changes
+    }
+  )
+
+  private val _ = delegate.contextMenuProperty().addListener(
+    new javafx.beans.value.ChangeListener[AnyRef] {
+      override def changed(
+          obs: javafx.beans.value.ObservableValue[? <: AnyRef],
+          oldVal: AnyRef,
+          newVal: AnyRef
+      ): Unit = changes = Change("contextMenu", oldVal, newVal) :: changes
+    }
+  )
+
+  private val _ = delegate.cursorProperty().addListener(
+    new javafx.beans.value.ChangeListener[AnyRef] {
+      override def changed(
+          obs: javafx.beans.value.ObservableValue[? <: AnyRef],
+          oldVal: AnyRef,
+          newVal: AnyRef
+      ): Unit = changes = Change("cursor", oldVal, newVal) :: changes
+    }
+  )
+
+  private val _ = delegate.effectProperty().addListener(
+    new javafx.beans.value.ChangeListener[AnyRef] {
+      override def changed(
+          obs: javafx.beans.value.ObservableValue[? <: AnyRef],
+          oldVal: AnyRef,
+          newVal: AnyRef
+      ): Unit = changes = Change("effect", oldVal, newVal) :: changes
+    }
+  )
+
+  private val _ = delegate.clipProperty().addListener(
+    new javafx.beans.value.ChangeListener[AnyRef] {
+      override def changed(
+          obs: javafx.beans.value.ObservableValue[? <: AnyRef],
+          oldVal: AnyRef,
+          newVal: AnyRef
+      ): Unit = changes = Change("clip", oldVal, newVal) :: changes
+    }
+  )
+
+  private val _ = delegate.cacheHintProperty().addListener(
+    new javafx.beans.value.ChangeListener[AnyRef] {
+      override def changed(
+          obs: javafx.beans.value.ObservableValue[? <: AnyRef],
+          oldVal: AnyRef,
+          newVal: AnyRef
+      ): Unit = changes = Change("cacheHint", oldVal, newVal) :: changes
+    }
+  )
+
+  /* Complex changes that Change(propertyName, oldVal, newVal) cannot yet
+   * express and which must be considered when expanding the design of Change:
+   *  - styleClass (ObservableBuffer): Add/Remove/Reorder/Update; replay of
+   *    Reorder and Update is not implemented, and removals of entries not
+   *    present on the real control are ambiguous.
+   *  - properties (ObservableMap): per-key put/remove changes.
+   *  - skin: a Skin is bound to the proxy instance and cannot be moved.
+   *  - eventHandlers/filters (onMouseClicked, onKeyPressed, ...): functions,
+   *    the replay would need to re-register on the real control.
+   *  - transforms, nodeOrientation, blendMode, inputMethodRequests,
+   *    accessibility properties, and any bound (not set) property: these are
+   *    ObservableList, enum or binding semantics where the old/new pair is not
+   *    sufficient.
+   */
 
   /** Calling this is not supported from the FXMonad system.
     *
