@@ -210,7 +210,8 @@ object Control {
           throw new Exception(
             s"Failed to find proper control for type ${ev.runtimeClass.getTypeName()} and control ${c.getClass().getTypeName()}"
           )
-      ).asInstanceOf[Control[A]]
+      )
+      .asInstanceOf[Control[A]]
   }
 
   private def selfConversion[A](): Conversion[A, A] = (x: A) => Right(x)

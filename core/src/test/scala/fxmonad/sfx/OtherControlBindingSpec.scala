@@ -60,10 +60,8 @@ class OtherControlBindingSpec extends munit.FunSuite {
       val outputWidget = new TextField()
       val input = Control
         .lookupControl[Boolean](widget)
-        .asInstanceOf[Control[Boolean]]
       val output = Control
         .lookupControl[String](outputWidget)
-        .asInstanceOf[Control[String]]
       output(input) = { selected => TextFieldControl(s"radio=$selected") }
       (widget, outputWidget, input, output)
     }
@@ -83,10 +81,8 @@ class OtherControlBindingSpec extends munit.FunSuite {
       val outputWidget = new TextField()
       val input = Control
         .lookupControl[Color](widget)
-        .asInstanceOf[Control[Color]]
       val output = Control
         .lookupControl[String](outputWidget)
-        .asInstanceOf[Control[String]]
       output(input) = { value => TextFieldControl(s"color=${value.toString}") }
       (widget, outputWidget, input, output)
     }
@@ -132,7 +128,6 @@ class OtherControlBindingSpec extends munit.FunSuite {
       val outputWidget = new TextField()
       val output = Control
         .lookupControl[String](outputWidget)
-        .asInstanceOf[Control[String]]
       output(input) = { mode => TextFieldControl(s"mode=$mode") }
       (online, bracelet, invalid, input, output, outputWidget)
     }

@@ -51,10 +51,8 @@ class CheckBoxControlSpec extends munit.FunSuite {
       val outputWidget = new TextField()
       val input = Control
         .lookupControl[Boolean](widget)
-        .asInstanceOf[Control[Boolean]]
       val output = Control
         .lookupControl[String](outputWidget)
-        .asInstanceOf[Control[String]]
       output(input) = { selected => TextFieldControl(s"selected=$selected") }
       (widget, outputWidget, input, output)
     }
@@ -74,10 +72,8 @@ class CheckBoxControlSpec extends munit.FunSuite {
       val outputWidget = new TextField()
       val input = Control
         .lookupControl[Int](widget)
-        .asInstanceOf[Control[Int]]
       val output = Control
         .lookupControl[String](outputWidget)
-        .asInstanceOf[Control[String]]
       output(input) = { value => TextFieldControl(s"count=$value") }
       (widget, outputWidget, input, output)
     }
@@ -98,10 +94,8 @@ class CheckBoxControlSpec extends munit.FunSuite {
       val outputWidget = new TextField()
       val input = Control
         .lookupControl[String](widget)
-        .asInstanceOf[Control[String]]
       val output = Control
         .lookupControl[String](outputWidget)
-        .asInstanceOf[Control[String]]
       output(input) = { value => TextFieldControl(s"state=$value") }
       (widget, outputWidget, input, output)
     }
@@ -122,7 +116,6 @@ class CheckBoxControlSpec extends munit.FunSuite {
       val labelWidget = new Label()
       val input = Control
         .lookupControl[Boolean](widget)
-        .asInstanceOf[Control[Boolean]]
       val output = ControlContainer[String](
         new StringProperty(),
         LabelControl[String](new scalafx.scene.control.Label(labelWidget))

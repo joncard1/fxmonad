@@ -86,11 +86,11 @@ class FXMonad(id: String) extends MacroAnnotation {
                         )
                       }.asTerm)
                     )
-                case None => 
-                  report.errorAndAbort(
-                    s"Could not find a ClassTag for ${Type.show[controlType]} at the macro call-site.",
-                    tt.pos
-                  )
+                  case None =>
+                    report.errorAndAbort(
+                      s"Could not find a ClassTag for ${Type.show[controlType]} at the macro call-site.",
+                      tt.pos
+                    )
                 }
             }
         }
