@@ -250,8 +250,7 @@ class ControlPane[A] extends jfxl.Pane with ControlContainer[A] {
         // TODO: Look again at this cast. Could be trouble. I think the issue is it can compile because the type of A gets erased so it casts to "Control" but there's a possibility of assigning Control[String] to Control[Int], right? It shouldn't, because after getting from Class[A] from lookups, the controls in there SHOULD all be Control[A], but it's not strict. Will it throw a runtime error if that's attempted, if the type of A is erased? Is it possible to put a type parameter on lookupControl?
         try {
           val control = Control
-            .lookupControl(tag.runtimeClass, child)
-            .asInstanceOf[Control[A]]
+            .lookupControl(child)
           setWrappedControl(control)
         } catch {
           case e: ClassCastException =>

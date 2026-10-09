@@ -56,7 +56,6 @@ class ToggleGroupControl[COut](
     inConversion: Conversion[COut, Object],
     outConversion: Conversion[Object, COut]
 ) extends ControlBase[COut, Object](using
-      inConversion,
       outConversion
     ) {
   control.selectedToggle.onChange((_, _, _) =>

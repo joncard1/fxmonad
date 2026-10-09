@@ -51,7 +51,6 @@ class TextFieldControl[COut](
     inConversion: Conversion[COut, String],
     outConversion: Conversion[String, COut]
 ) extends SFXControl[COut, String, TextField](control)(using
-      inConversion,
       outConversion
     )
     with TooltipValidationErrorStrategy[COut, String, TextField] {

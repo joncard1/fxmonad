@@ -51,7 +51,6 @@ class SliderControl[COut](
     inConversion: Conversion[COut, Double],
     outConversion: Conversion[Double, COut]
 ) extends SFXControl[COut, Double, Slider](control)(using
-      inConversion,
       outConversion
     )
     with TooltipValidationErrorStrategy[COut, Double, Slider] {

@@ -21,7 +21,6 @@ class ColorPickerControl[COut](
     inConversion: Conversion[COut, Color],
     outConversion: Conversion[Color, COut]
 ) extends SFXControl[COut, Color, ColorPicker](control)(using
-      inConversion,
       outConversion
     )
     with TooltipValidationErrorStrategy[COut, Color, ColorPicker] {

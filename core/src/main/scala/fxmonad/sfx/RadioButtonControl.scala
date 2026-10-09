@@ -51,7 +51,6 @@ class RadioButtonControl[COut](
     inConversion: Conversion[COut, Boolean],
     outConversion: Conversion[Boolean, COut]
 ) extends SFXControl[COut, Boolean, RadioButton](control)(using
-      inConversion,
       outConversion
     )
     with TooltipValidationErrorStrategy[COut, Boolean, RadioButton] {

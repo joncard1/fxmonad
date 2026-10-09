@@ -50,11 +50,9 @@ class CheckBoxControlSpec extends munit.FunSuite {
       val widget = new CheckBox()
       val outputWidget = new TextField()
       val input = Control
-        .lookupControl(classOf[Boolean], widget)
-        .asInstanceOf[Control[Boolean]]
+        .lookupControl[Boolean](widget)
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
-        .asInstanceOf[Control[String]]
+        .lookupControl[String](outputWidget)
       output(input) = { selected => TextFieldControl(s"selected=$selected") }
       (widget, outputWidget, input, output)
     }
@@ -73,11 +71,9 @@ class CheckBoxControlSpec extends munit.FunSuite {
       val widget = new CheckBox()
       val outputWidget = new TextField()
       val input = Control
-        .lookupControl(classOf[Int], widget)
-        .asInstanceOf[Control[Int]]
+        .lookupControl[Int](widget)
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
-        .asInstanceOf[Control[String]]
+        .lookupControl[String](outputWidget)
       output(input) = { value => TextFieldControl(s"count=$value") }
       (widget, outputWidget, input, output)
     }
@@ -97,11 +93,9 @@ class CheckBoxControlSpec extends munit.FunSuite {
       val widget = new CheckBox()
       val outputWidget = new TextField()
       val input = Control
-        .lookupControl(classOf[String], widget)
-        .asInstanceOf[Control[String]]
+        .lookupControl[String](widget)
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
-        .asInstanceOf[Control[String]]
+        .lookupControl[String](outputWidget)
       output(input) = { value => TextFieldControl(s"state=$value") }
       (widget, outputWidget, input, output)
     }
@@ -121,8 +115,7 @@ class CheckBoxControlSpec extends munit.FunSuite {
       val widget = new CheckBox()
       val labelWidget = new Label()
       val input = Control
-        .lookupControl(classOf[Boolean], widget)
-        .asInstanceOf[Control[Boolean]]
+        .lookupControl[Boolean](widget)
       val output = ControlContainer[String](
         new StringProperty(),
         LabelControl[String](new scalafx.scene.control.Label(labelWidget))

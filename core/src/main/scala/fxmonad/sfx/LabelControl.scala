@@ -52,7 +52,6 @@ class LabelControl[COut](
     inConversion: Conversion[COut, String],
     outConversion: Conversion[String, COut]
 ) extends SFXControl[COut, String, Label](control)(using
-      inConversion,
       outConversion
     ) {
   // Not bothering to subscribe to property changes because it's a read-only control

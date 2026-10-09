@@ -3,6 +3,7 @@ package fxmonad
 import scala.annotation.MacroAnnotation
 import scala.annotation.experimental
 import scala.quoted.*
+import scala.reflect.ClassTag
 
 @experimental
 class FXMonad(id: String) extends MacroAnnotation {
@@ -59,38 +60,41 @@ class FXMonad(id: String) extends MacroAnnotation {
             report.errorAndAbort(
               "The Control type should have 2 type arguments"
             )
-          case controlType :: _ =>
-            val controlTypeTree = TypeTree.of(using controlType.asType)
-            Symbol
-              .requiredPackage("scala.Predef")
-              .methodMember("classOf") match {
-              case Nil =>
+          case controlTypeRepr :: _ =>
+            controlTypeRepr.asType match {
+              case '[controlType] =>
+                Expr.summon[ClassTag[controlType]] match {
+                  case Some(classTagExpr) =>
+                    ValDef(
+                      controlSymbol,
+                      Some('{
+                        if (
+                          ${
+                            jfxControlRef.asExprOf[javafx.scene.Node]
+                          } == null
+                        )
+                          throw Exception(
+                            "JavaFX seems not to have initialized the underlying control " + ${
+                              Expr(id)
+                            }
+                          )
+                        Control.lookupControl[controlType](
+                          ${
+                            jfxControlRef.asExprOf[javafx.scene.Node]
+                          }
+                        )(using $classTagExpr)
+                      }.asTerm.changeOwner(controlSymbol))
+                    )
+                  case None =>
+                    report.errorAndAbort(
+                      s"Could not find a ClassTag for ${Type.show[controlType]} at the macro call-site.",
+                      tt.pos
+                    )
+                }
+              case _ =>
                 report.errorAndAbort(
-                  "Something has gone very wrong if I can't find scala.Predef.classOf"
-                )
-              case classOfSymbol :: _ =>
-                val classOfTerm =
-                  TypeApply(Ref(classOfSymbol), List(controlTypeTree))
-                ValDef(
-                  controlSymbol,
-                  Some('{
-                    if (
-                      ${
-                        jfxControlRef.asExprOf[javafx.scene.Node]
-                      } == null
-                    )
-                      throw Exception(
-                        "JavaFX seems not to have initialized the underlying control " + ${
-                          Expr(id)
-                        }
-                      )
-                    Control.lookupControl(
-                      ${ classOfTerm.asExprOf[Class[?]] },
-                      ${
-                        jfxControlRef.asExprOf[javafx.scene.Node]
-                      }
-                    )
-                  }.asTerm)
+                  s"Failed to convert TypeRepr to Type.",
+                  tt.pos
                 )
             }
         }

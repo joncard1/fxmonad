@@ -12,9 +12,6 @@ import javafx.scene.layout.Pane
   *
   * @param control
   *   The ScalaFX control wrapped by this object.
-  * @param inConversion
-  *   A utility to convert value of the type exposed by this monad to the naive
-  *   type of the control.
   * @param outConversion
   *   A utility to convert a value from the naive type of the control to the
   *   type exposed by this monad.jk
@@ -24,9 +21,8 @@ abstract class SFXControl[
     CIn,
     InnerControl <: scalafx.scene.control.Control
 ](val control: InnerControl)(using
-    inConversion: Conversion[COut, CIn],
     outConversion: Conversion[CIn, COut]
-) extends ControlBase(using inConversion, outConversion) {
+) extends ControlBase(using outConversion) {
   override def mountControl(context: Option[Control.MountContext]) =
     context match {
       case None => println("No context to match to")
