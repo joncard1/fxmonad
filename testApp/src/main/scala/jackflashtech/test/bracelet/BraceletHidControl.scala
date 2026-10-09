@@ -2,6 +2,7 @@ package jackflashtech.test.bracelet
 
 import scalafx.beans.property.ObjectProperty
 import org.hid4java.HidManager
+import org.hid4java.HidServices
 import org.hid4java.HidServicesListener
 import scala.jdk.CollectionConverters._
 import scala.util.Try
@@ -12,11 +13,8 @@ import org.hid4java.event.HidServicesEvent
 import scala.util.Failure
 import scala.util.Success
 import org.hid4java.HidServicesSpecification
-import org.hid4java.HidDevice
 import fxmonad.Control.MountContext
-import jackflashtech.test.bracelet.BraceletHidControl.startListener
-import jackflashtech.test.bracelet.BraceletHidControl.stopListener
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.Executor
 import jackflashtech.test.bracelet.Intensities._
 
 /** This assumes there is only one device of name "Bracelet", and it is the
@@ -53,238 +51,161 @@ object BraceletHidControl {
     */
   val StepSize: Intensity = Intensity(IntensityRange(1))
 
-  def stop(): Unit = {
-    services.map(services => {
-      listeners.getAndUpdate(listeners => {
-        listeners.foreachEntry((_, listener) => {
-          services.removeHidServicesListener(listener)
-        })
-        Map()
-      })
-    }): Unit
-  }
+  /** Forwards hid4java events for one product name to its monitor. */
+  private final class BraceletServiceListener(
+      deviceName: String,
+      monitor: BraceletDeviceMonitor
+  ) extends HidServicesListener {
+    private def forThisDevice(event: HidServicesEvent)(
+        f: BraceletDevice => Unit
+    ): Unit =
+      Option(event.getHidDevice())
+        .filter(device => deviceName == device.getProduct())
+        .foreach(device => f(HidBraceletDevice(device)))
 
-  // TODO: Figure out if this should be in an AtomicReference. It will be accessed from at least two threads (JavaFX Application Thread and the java4hid thread, at least).
-  private val listeners: AtomicReference[Map[String, BraceletServiceListener]] =
-    AtomicReference(Map())
-
-  def startListener(deviceName: String): Unit = {
-    listeners.get
-      .get(deviceName)
-      .map(listener => {
-        listener.state.getAndUpdate(_ => listener.ActiveState())
-      }): Unit
-  }
-  def stopListener(deviceName: String): Unit = {
-    listeners.get
-      .get(deviceName)
-      .map(listener => {
-        listener.state.getAndUpdate(_ => listener.InactiveState())
-      }): Unit
-  }
-
-  class BraceletServiceListener(deviceName: String)
-      extends HidServicesListener {
-
-    var state: AtomicReference[BraceletHidState] = AtomicReference(
-      InactiveState()
-    )
-
-    var controls: AtomicReference[Map[ButtonNumber, BraceletHidControl]] =
-      AtomicReference(Map())
-
-    trait BraceletHidState {
-      // To truly implement the state machine pattern, this should return an instance of BraceletHidState, but in this case the states never transition to new states, so it's not worth it.
-      def processData(data: Array[Byte]): BraceletHidState
-    }
-
-    case class ActiveState() extends BraceletHidState {
-      override def processData(data: Array[Byte]): BraceletHidState = {
-        if (data.length == 0) {
-          println("Bracelet report length should be at least 1 byte.")
-          return this
-        }
-        // If the report is longer, then the device has written multiple reports since the last DataReadInterval poll. I believe it to be a good assumption that the last byte is the newest data, given what I have seen of hid4java's use ObjectStream to read data from the device, but that assumption underlies this algorithm.
-        // val dataByte = data(data.length - 1)
-        val dataByte = data(0)
-        val array = (0 to 7).map { i =>
-          ((dataByte >> i) & 1) == 1
-        }.toArray
-        controls.getAndUpdate(cntrls => {
-          for (buttonNumber: ButtonNumber <- cntrls.keySet) {
-            val buttonPressed = array(buttonNumber.asInt)
-            if (buttonPressed) {
-              cntrls
-                .get(buttonNumber)
-                .map(control =>
-                  control.reportButtonPress(buttonNumber, buttonPressed)
-                ): Unit
-            }
-            // }
-          }
-          cntrls
-        })
-        println(s"Length: ${data.length}")
-        println(f"Data: ${Integer.toBinaryString(dataByte)}")
-        this
-      }
-    }
-
-    case class InactiveState() extends BraceletHidState {
-      override def processData(data: Array[Byte]): BraceletHidState = this
-    }
-
-    override def hidDataReceived(event: HidServicesEvent): Unit = {
-      if (event.getHidDevice().getProduct().equals(deviceName)) {
-        state.getAndUpdate(_.processData(event.getDataReceived())): Unit
-      }
-    }
-
-    override def hidFailure(event: HidServicesEvent): Unit = {
-      if (event.getHidDevice().getProduct().equals(deviceName)) {
-        state.set(InactiveState())
-      }
-    }
-
-    // TODO: I'm not convinced that either attaching or detaching is being done entirely correctly. Probably there are threading issues with setting the state, or something else.
-    override def hidDeviceDetached(event: HidServicesEvent): Unit = {
-      if (event.getHidDevice().getProduct().equals(deviceName)) {
-        state.set(InactiveState())
-      }
-    }
-
-    override def hidDeviceAttached(event: HidServicesEvent): Unit = {
-      if (event.getHidDevice().getProduct().equals(deviceName)) {
-        val isOpen = if (event.getHidDevice().isClosed()) {
-          openDevice(event.getHidDevice())
-        } else {
-          true
-        }
-        if (isOpen) {
-          state.set(ActiveState())
-        } else {
-          state.set(InactiveState())
-        }
-      }
-    }
+    override def hidDeviceAttached(event: HidServicesEvent): Unit =
+      forThisDevice(event)(monitor.deviceAttached)
+    override def hidDeviceDetached(event: HidServicesEvent): Unit =
+      forThisDevice(event)(monitor.deviceDetached)
+    override def hidFailure(event: HidServicesEvent): Unit =
+      forThisDevice(event)(monitor.deviceFailed)
+    override def hidDataReceived(event: HidServicesEvent): Unit =
+      forThisDevice(event)(monitor.dataReceived(_, event.getDataReceived()))
   }
 
   private val specification = new HidServicesSpecification()
   specification.setAutoDataRead(true)
   specification.setDataReadInterval(DataReadInterval)
 
-  lazy private val services = Try {
-    HidManager
-      .getHidServices(specification)
-  } match {
-    case Failure(exception) =>
-      println(s"Exception getting HID services. ${exception.toString()}")
-      // TODO: Possibly should throw this.
-      None
-    case Success(services) =>
-      services.start()
-      Some(services)
+  // Guarded by `this`. Only touched by apply() and stop(), never by hid4java
+  // callbacks, which go straight to the per-device monitors.
+  private var services: Option[HidServices] = None
+  private var monitors
+      : Map[String, (BraceletDeviceMonitor, BraceletServiceListener)] = Map()
+
+  private def hidServices(): HidServices = synchronized {
+    services.getOrElse {
+      Try(HidManager.getHidServices(specification)) match {
+        case Failure(exception) =>
+          throw new Exception(
+            "Failed to find an HidServices object.",
+            exception
+          )
+        case Success(created) =>
+          created.start()
+          services = Some(created)
+          created
+      }
+    }
   }
 
-  def apply[A](
+  /** Returns the monitor for `deviceName`, creating it on first use. A new
+    * monitor's listener is registered *before* looking for an already-attached
+    * device, so an attach can't slip between the two; the monitor ignores the
+    * duplicate if both see it.
+    */
+  private def monitorFor(deviceName: String): BraceletDeviceMonitor = {
+    val (monitor, created, hid) = synchronized {
+      val hid = hidServices()
+      monitors.get(deviceName) match {
+        case Some((monitor, _)) => (monitor, false, hid)
+        case None               =>
+          val monitor = new BraceletDeviceMonitor()
+          val listener = new BraceletServiceListener(deviceName, monitor)
+          hid.addHidServicesListener(listener)
+          monitors = monitors + (deviceName -> (monitor, listener))
+          (monitor, true, hid)
+      }
+    }
+    if (created) {
+      hid
+        .getAttachedHidDevices()
+        .asScala
+        .find(device => deviceName == device.getProduct())
+        .foreach(device => monitor.deviceAttached(HidBraceletDevice(device)))
+    }
+    monitor
+  }
+
+  /** Creates a control driven by two buttons of the named device.
+    *
+    * @param publishOn
+    *   the executor on which the control's value is updated, and therefore on
+    *   which all of its listeners run. It must be the thread that owns every
+    *   control this one feeds into — for ScalaFX-backed controls, the JavaFX
+    *   Application Thread (`fxmonad.sfx.FXThreadExecutor`).
+    */
+  def apply(
       deviceName: String,
       incrementButton: Int,
-      decrementButton: Int
+      decrementButton: Int,
+      publishOn: Executor
   ): BraceletHidControl = {
-
-    def registerButtonNumber(
-        listener: BraceletServiceListener,
-        buttonNumber: ButtonNumber,
-        control: BraceletHidControl
-    ): Unit = {
-      /* if ((buttonNumber < 0) || (buttonNumber > 7))
-        throw Exception(
-          "Only buttons with numbers 0-7 inclusive can be registered for this device."
-        )
-       */
-      listener.controls.getAndUpdate(controls =>
-        controls + (buttonNumber -> control)
-      ): Unit
-    }
-
-    if (services.isEmpty)
-      throw new Exception("Failed to find an HidServices object.")
-    val control = services.flatMap(services => {
-      val incButton = incrementButton.asButtonNumber
-        .fold(msg => throw Exception(msg), bn => bn)
-      val decButton = decrementButton.asButtonNumber
-        .fold(msg => throw Exception(msg), bn => bn)
-      val devName = deviceName
-      val control = new BraceletHidControl {
-        protected val incrementButton = incButton;
-        protected val decrementButton = decButton;
-        protected val deviceName = devName
-      }
-
-      listeners
-        .getAndUpdate(listeners =>
-          listeners + (deviceName -> listeners
-            .get(deviceName)
-            .fold({
-              val listener = new BraceletServiceListener(deviceName)
-              services
-                .getAttachedHidDevices()
-                .asScala
-                .find(_.getProduct().equals(deviceName))
-                .fold({
-                  registerButtonNumber(listener, incButton, control)
-                  registerButtonNumber(listener, decButton, control)
-                  Some(control)
-                })(device => {
-                  val isOpen = openDevice(device)
-
-                  if (isOpen) {
-                    registerButtonNumber(listener, incButton, control)
-                    registerButtonNumber(listener, decButton, control)
-                    listener.state.set(listener.ActiveState())
-                    Some(control)
-                  } else {
-                    throw new Exception(s"Device ${deviceName} did not open")
-                  }
-                }): Unit
-              services.addHidServicesListener(listener)
-              listener
-            })(listener => {
-              registerButtonNumber(listener, incButton, control)
-              registerButtonNumber(listener, decButton, control)
-              listener
-            }))
-        )
-      Option(control)
-    })
-
-    control.get
+    val incButton = incrementButton.asButtonNumber
+      .fold(msg => throw Exception(msg), bn => bn)
+    val decButton = decrementButton.asButtonNumber
+      .fold(msg => throw Exception(msg), bn => bn)
+    val monitor = monitorFor(deviceName)
+    val control =
+      new BraceletHidControl(monitor, incButton, decButton, publishOn)
+    // Registered only once fully constructed, so a data-read thread can never
+    // observe a partially-initialized control.
+    monitor.register(control)
+    control
   }
 
-  private def openDevice(device: HidDevice) = {
-    val isOpen = if (device.isClosed()) {
-      println("Am trying to open")
-      device.open()
-    } else {
-      println("Was opened when I found it")
-      true
+  /** Shuts down HID handling: in-flight and queued reports are discarded, the
+    * devices opened by the monitors are closed, and hid4java's scanner thread
+    * is stopped. Controls created earlier stop updating.
+    */
+  def stop(): Unit = {
+    val (toStop, stoppedMonitors) = synchronized {
+      val current = (services, monitors.values.toList)
+      services = None
+      monitors = Map()
+      current
     }
-    println(s"${device.getProduct()} is ${isOpen}")
-    isOpen
+    stoppedMonitors.foreach((monitor, _) => monitor.stop())
+    toStop.foreach(services => {
+      stoppedMonitors.foreach((_, listener) =>
+        services.removeHidServicesListener(listener)
+      )
+      // Stops the scanner thread and closes the device instances hid4java
+      // itself tracks. The native library is released by hid4java's own
+      // shutdown hook.
+      services.stop()
+    })
   }
 }
 
-/** A placeholder [[fxmonad.Control]]`[Intensity]` representing the physical
-  * "Bracelet" HID device.
+/** A [[fxmonad.Control]]`[Intensity]` driven by two buttons of the physical
+  * "Bracelet" HID device: holding the increment (decrement) button raises
+  * (lowers) the value by [[BraceletHidControl.StepSize]] per report.
+  *
+  * ==Threading and supported use==
+  * The value is *produced* by the device, never consumed. `defaultProperty` is
+  * written only on the `publishOn` executor given to
+  * [[BraceletHidControl.apply]], so its listeners (binders, containers, and the
+  * widgets downstream of them) all run on that executor's thread. hid4java
+  * threads never touch the property.
+  *
+  * Writing to this control's value from elsewhere is unsupported: assigning it
+  * (`hid() = x`), binding it as the output of another control (`hid(other) =
+  * ...`), or binding another control's property into it. Such writes are not
+  * synchronized with the device, will be overwritten by the next press, and, if
+  * made from a thread other than `publishOn`'s, are a data race.
+  *
+  * Presses are only applied while the control is mounted (between
+  * [[mountControl]] and [[unmountControl]]) and a device is connected.
   */
-// TODO: Interesting question: when it's dismounted, stop listening to the HID data? This suggests that controls may need to handle their own dismounting, which may "solve" the fact that ControlContainer objects need to know a lot about JavaFX, etc., which it would be better if it didn't.
 // TODO: Does this impact the ControlPane idea? Being able to dismount themselves doesn't imply knowing enough context to mount themselves, especially when they may be re-mounting themselves into a new location.
-trait BraceletHidControl extends Control[Intensity] {
-  import BraceletHidControl.ButtonNumber._
-
-  protected val deviceName: String
-  protected val incrementButton: ButtonNumber
-  protected val decrementButton: ButtonNumber
+final class BraceletHidControl private[bracelet] (
+    monitor: BraceletDeviceMonitor,
+    incrementButton: BraceletHidControl.ButtonNumber.ButtonNumber,
+    decrementButton: BraceletHidControl.ButtonNumber.ButtonNumber,
+    publishOn: Executor
+) extends Control[Intensity] {
+  import BraceletHidControl.ButtonNumber.ButtonNumber
 
   override def showError(errorMsg: String): Unit = {
     println("Bracelet HID was instructed to show an error.")
@@ -297,19 +218,36 @@ trait BraceletHidControl extends Control[Intensity] {
   override val defaultProperty: Property[Intensity, ?] =
     ObjectProperty[Intensity](Intensity.min)
 
-  def reportButtonPress(buttonNumber: ButtonNumber, pressed: Boolean) = {
-    if ((buttonNumber == incrementButton) && pressed) {
+  private[bracelet] def buttons: List[ButtonNumber] =
+    List(incrementButton, decrementButton)
+
+  /** Called by the monitor (on a hid4java thread). Hands the press to
+    * `publishOn`, where it is applied only if `token` is still current.
+    */
+  private[bracelet] def publishButtonPress(
+      buttonNumber: ButtonNumber,
+      token: Long
+  ): Unit =
+    publishOn.execute(() =>
+      if (monitor.isCurrent(this, token)) applyButtonPress(buttonNumber)
+    )
+
+  private def applyButtonPress(buttonNumber: ButtonNumber): Unit = {
+    if (buttonNumber == incrementButton) {
       defaultProperty() = defaultProperty() + BraceletHidControl.StepSize
-    } else if ((buttonNumber == decrementButton) && pressed) {
+    } else if (buttonNumber == decrementButton) {
       defaultProperty() = defaultProperty() - BraceletHidControl.StepSize
     }
   }
 
   // TODO: These should take no context and should return no context. They just need to start and stop their listeners.
+  // Mounting just starts and stops this control's share of the device's
+  // reports; there is no location to remember, so no context is used or
+  // returned.
   override def mountControl(context: Option[MountContext]): Unit =
-    startListener(deviceName)
+    monitor.mount(this)
   override def unmountControl(): Option[MountContext] = {
-    stopListener(deviceName)
+    monitor.unmount(this)
     None
   }
 }

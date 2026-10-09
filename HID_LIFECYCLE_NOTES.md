@@ -23,3 +23,18 @@ BraceletApp now calls BraceletHidControl.stop() on window close, and stop() remo
 
 It is not a complete shutdown: the current code does not visibly stop the HID services or close the device, and it doesn’t coordinate shutdown with callbacks already in flight. So the stop hook is useful, but the remaining cleanup belongs in the deferred lifecycle work recorded in HID_LIFECYCLE_NOTES.md.
 
+
+## Resolution
+
+The issues above were addressed by restructuring rather than by atomics:
+
+- **hid4java's threads.** Attach/detach/failure events arrive on its device scanner thread, except the first scan, which runs on whichever thread creates `HidServices` (the FX thread here). Each opened `HidDevice` has its own data-read thread. `HidDevice.close()` synchronizes on the device, which the data-read thread holds while delivering data.
+- **One lock, no side effects under it.** `BraceletDeviceMonitor` holds all connection state behind its own monitor, so attach, detach, failure, data, mount/unmount and stop are serialized. Device `open`/`close` and publishing always happen *outside* that lock, which avoids deadlocking against the data-read thread's device lock. The `AtomicReference`s (and their side-effecting update functions) are gone.
+- **Property updates are marshalled by the caller's choice of executor, not by the HID.** `BraceletHidControl` takes a plain `java.util.concurrent.Executor` and only writes its property there. The app passes `fxmonad.sfx.FXThreadExecutor`, so the HID code has no JavaFX dependency while every downstream listener runs on the FX thread.
+- **Stale updates.** Every lifecycle change bumps a generation counter. Presses are tagged with it on the data thread and dropped on the executor if it has moved on (e.g. a detach or unmount happened while the press was queued).
+- **Connected vs. mounted.** These are separate facts now: presses are delivered only to *mounted* controls *while* a device is attached and open. Mounting no longer marks a disconnected device active, and unmounting one control no longer stops other controls on the same device.
+- **Stop.** `BraceletHidControl.stop()` stops the monitors (discarding queued presses and closing the device instances they opened, which hid4java doesn't track), removes the listeners, and stops hid4java's scanner. The native library is still released by hid4java's own shutdown hook.
+
+Writing to a `BraceletHidControl`'s value from outside (assigning it, binding it as an output, or binding another property into it) is documented as unsupported.
+
+Tests: `testApp/src/test/scala/jackflashtech/test/bracelet/BraceletDeviceMonitorSpec.scala`, using fake devices that mimic hid4java's locking.

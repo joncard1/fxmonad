@@ -71,11 +71,11 @@ class BraceletController {
 
   /** Placeholder for the physical "Bracelet" HID device. */
   lazy val hidControl1: Control[Intensity] =
-    BraceletHidControl("Bracelet", 0, 1)
+    BraceletHidControl("Bracelet", 0, 1, FXThreadExecutor)
 
   // TODO: Maybe configure the buttons on the other hand as emitters
   lazy val hidControl2: Control[Intensity] =
-    BraceletHidControl("Bracelet", 3, 4)
+    BraceletHidControl("Bracelet", 3, 4, FXThreadExecutor)
 
   // Not backed by any widget: tracks whichever source (HID or slider) is
   // currently selected for the matching display.
