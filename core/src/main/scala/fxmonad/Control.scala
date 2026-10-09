@@ -132,11 +132,10 @@ object Control {
           c.initializeContainer(using summon[ClassTag[Double]])
           c
       }),
-      (classOf[Color]) -> List({
-        case c: javafx.scene.control.ColorPicker =>
-          ControlContainer(
-            ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
-          )
+      (classOf[Color]) -> List({ case c: javafx.scene.control.ColorPicker =>
+        ControlContainer(
+          ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
+        )
       })
     )
   )
