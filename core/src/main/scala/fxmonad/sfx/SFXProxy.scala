@@ -158,7 +158,7 @@ class TextFieldProxy extends TextField with SFXProxy[TextField] {
       case c @ Change("text", _, _) =>
         Platform.runLater {
           control.text() = c.newVal.asInstanceOf[String]
-          //println(s"Control: ${control.text()}")
+          // println(s"Control: ${control.text()}")
         }
     }
     localChange.orElse(super.applyChangesPF(control))
