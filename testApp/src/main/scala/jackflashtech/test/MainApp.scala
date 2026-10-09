@@ -6,9 +6,6 @@ import javafx.{scene => jfxs}
 import scalafx.scene.Scene
 import scalafx.Includes._
 import scala.annotation.experimental
-import fxmonad.Control
-import scalafx.scene.paint.Color
-import fxmonad.sfx._
 
 /** A simple ScalaFX application used for testing the use cases for this
   * project.
@@ -16,13 +13,6 @@ import fxmonad.sfx._
 @experimental
 object MainApp extends JFXApp3 {
   override def start(): Unit = {
-    Control.registerControl(
-      classOf[Color],
-      { case c: javafx.scene.control.ColorPicker =>
-        ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
-      }
-    )
-
     stage = new JFXApp3.PrimaryStage {
       val viewClass = getClass.getResource("main-screen.fxml")
       println(viewClass.toString())

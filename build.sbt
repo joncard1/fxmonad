@@ -11,6 +11,7 @@ lazy val core = project
     name := "fxmonad-core",
     libraryDependencies += "org.scalafx" %% "scalafx" % jfxVersion,
     libraryDependencies += "org.scalameta" %% "munit" % "1.3.2" % Test,
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.19.0" % Test,
     libraryDependencies += "org.testfx" % "testfx-core" % "4.0.18" % Test,
     libraryDependencies += "org.testfx" % "openjfx-monocle" % "21.0.2" % Test,
     Test / fork := true,

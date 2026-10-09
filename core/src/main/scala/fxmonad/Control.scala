@@ -11,6 +11,7 @@ import scalafx.beans.property.DoubleProperty
 import java.util.concurrent.atomic.AtomicReference
 import scala.reflect.ClassTag
 import scalafx.beans.property.ObjectProperty
+import scalafx.scene.paint.Color
 
 object PropertyConstructor {
   given PropertyConstructor[String] = () => new StringProperty()
@@ -130,6 +131,12 @@ object Control {
         case c: fxmonad.ControlPane[Double] =>
           c.initializeContainer(using summon[ClassTag[Double]])
           c
+      }),
+      (classOf[Color]) -> List({
+        case c: javafx.scene.control.ColorPicker =>
+          ControlContainer(
+            ColorPickerControlColor(scalafx.scene.control.ColorPicker(c))
+          )
       })
     )
   )
