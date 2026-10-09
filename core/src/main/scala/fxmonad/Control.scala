@@ -249,7 +249,7 @@ object Control {
 }
 
 /** The base for implementing subclasses. Providing updateProperty requires
-  * knowing the "naive" type of the principle value of the control (String for a
+  * knowing the "naive" type of the principal value of the control (String for a
   * TextField or Label, Double for a Slider, etc). There generally also needs to
   * be another [[Conversion]] object provided in the subscription to the change
   * event watching defaultProperty to convert the outward-facing type to the
