@@ -12,9 +12,6 @@ import javafx.scene.layout.Pane
   *
   * @param control
   *   The ScalaFX control wrapped by this object.
-  * @param inConversion
-  *   A utility to convert value of the type exposed by this monad to the naive
-  *   type of the control.
   * @param outConversion
   *   A utility to convert a value from the naive type of the control to the
   *   type exposed by this monad.jk
