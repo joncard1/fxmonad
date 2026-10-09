@@ -78,13 +78,12 @@ class FXMonad(id: String) extends MacroAnnotation {
                               Expr(id)
                             }
                           )
-                        given ClassTag[controlType] = $classTagExpr
                         Control.lookupControl[controlType](
                           ${
                             jfxControlRef.asExprOf[javafx.scene.Node]
                           }
-                        )
-                      }.asTerm)
+                        )(using $classTagExpr)
+                      }.asTerm.changeOwner(controlSymbol))
                     )
                   case None =>
                     report.errorAndAbort(
@@ -92,6 +91,11 @@ class FXMonad(id: String) extends MacroAnnotation {
                       tt.pos
                     )
                 }
+              case _ =>
+                report.errorAndAbort(
+                  s"Failed to convert TypeRepr to Type.",
+                  tt.pos
+                )
             }
         }
         List(
