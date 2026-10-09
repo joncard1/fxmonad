@@ -24,9 +24,8 @@ abstract class SFXControl[
     CIn,
     InnerControl <: scalafx.scene.control.Control
 ](val control: InnerControl)(using
-    inConversion: Conversion[COut, CIn],
     outConversion: Conversion[CIn, COut]
-) extends ControlBase(using inConversion, outConversion) {
+) extends ControlBase(using outConversion) {
   override def mountControl(context: Option[Control.MountContext]) =
     context match {
       case None => println("No context to match to")

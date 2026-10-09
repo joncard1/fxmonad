@@ -49,10 +49,10 @@ class SliderControlSpec extends munit.FunSuite {
       val widget = new Slider(0.0, 100.0, 0.0)
       val outputWidget = new TextField()
       val input = Control
-        .lookupControl(classOf[Double], widget)
+        .lookupControl[Double](widget)
         .asInstanceOf[Control[Double]]
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
+        .lookupControl[String](outputWidget)
         .asInstanceOf[Control[String]]
       output(input) = { value => TextFieldControl(s"slider=$value") }
       (widget, outputWidget, input, output)
@@ -74,10 +74,10 @@ class SliderControlSpec extends munit.FunSuite {
       val widget = new Slider(0.0, 100.0, 0.0)
       val outputWidget = new TextField()
       val input = Control
-        .lookupControl(classOf[Int], widget)
+        .lookupControl[Int](widget)
         .asInstanceOf[Control[Int]]
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
+        .lookupControl[String](outputWidget)
         .asInstanceOf[Control[String]]
       output(input) = { value => TextFieldControl(s"slider=$value") }
       (widget, outputWidget, input, output)

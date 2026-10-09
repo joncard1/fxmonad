@@ -59,10 +59,10 @@ class OtherControlBindingSpec extends munit.FunSuite {
       val widget = new RadioButton()
       val outputWidget = new TextField()
       val input = Control
-        .lookupControl(classOf[Boolean], widget)
+        .lookupControl[Boolean](widget)
         .asInstanceOf[Control[Boolean]]
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
+        .lookupControl[String](outputWidget)
         .asInstanceOf[Control[String]]
       output(input) = { selected => TextFieldControl(s"radio=$selected") }
       (widget, outputWidget, input, output)
@@ -82,10 +82,10 @@ class OtherControlBindingSpec extends munit.FunSuite {
       val widget = new javafx.scene.control.ColorPicker(JFXColor.WHITE)
       val outputWidget = new TextField()
       val input = Control
-        .lookupControl(classOf[Color], widget)
+        .lookupControl[Color](widget)
         .asInstanceOf[Control[Color]]
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
+        .lookupControl[String](outputWidget)
         .asInstanceOf[Control[String]]
       output(input) = { value => TextFieldControl(s"color=${value.toString}") }
       (widget, outputWidget, input, output)
@@ -131,7 +131,7 @@ class OtherControlBindingSpec extends munit.FunSuite {
       val input = ControlContainer[String](new StringProperty(), groupControl)
       val outputWidget = new TextField()
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
+        .lookupControl[String](outputWidget)
         .asInstanceOf[Control[String]]
       output(input) = { mode => TextFieldControl(s"mode=$mode") }
       (online, bracelet, invalid, input, output, outputWidget)

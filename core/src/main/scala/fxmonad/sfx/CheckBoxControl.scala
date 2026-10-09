@@ -51,7 +51,6 @@ class CheckBoxControl[COut](
     inConversion: Conversion[COut, Boolean],
     outConversion: Conversion[Boolean, COut]
 ) extends SFXControl[COut, Boolean, CheckBox](control)(using
-      inConversion,
       outConversion
     )
     with TooltipValidationErrorStrategy[COut, Boolean, CheckBox] {

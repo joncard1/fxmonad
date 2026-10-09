@@ -42,10 +42,10 @@ class TextFieldControlBindingSpec extends munit.FunSuite {
       val inputWidget = new TextField("0")
       val outputWidget = new TextField()
       val input = Control
-        .lookupControl(classOf[Int], inputWidget)
+        .lookupControl[Int](inputWidget)
         .asInstanceOf[Control[Int]]
       val output = Control
-        .lookupControl(classOf[String], outputWidget)
+        .lookupControl[String](outputWidget)
         .asInstanceOf[Control[String]]
 
       output(input) = { value => TextFieldControl(s"value=$value") }
