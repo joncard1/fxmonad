@@ -6,7 +6,7 @@ This project is still pretty immature, so rather than setting release candidate 
 
 - [ ] Possibly add code to FXMonad (or whatever eventually does it) to detect if the custom control whose controller is being included is a ControlPane, which might mean that it, rather than the controller, should be the Control[?]. (Might not be possble) And what happens when using <fx:root> and it's loaded into a ControlPane?
 
-- [ ] Create a method to register new classes in Control.lookups. Expecting users to interact directly with it isn't realistic.
+- [X] Create a method to register new classes in Control.lookups. Expecting users to interact directly with it isn't realistic.
 
 - [ ] Create injectable "error display strategy" method; it shouldn't necessary for this library to preemptively decide to use tooltips.
 
