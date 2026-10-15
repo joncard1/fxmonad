@@ -33,3 +33,5 @@ metals.sbt
 
 # Claude
 CLAUDE.local.md
+# Self-notes tracking the session numbers for Claude sessions that may want to be revisited. Not applicable across developers.
+.claude-*

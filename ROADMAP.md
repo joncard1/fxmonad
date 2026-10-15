@@ -4,11 +4,11 @@ This project is still pretty immature, so rather than setting release candidate 
 
 ## Features
 
-- [ ] Possibly add code to FXMonad (or whatever eventually does it) to detect if the custom control whose controller is being included is a ControlPane, which might mean that it, rather than the controller, should be the Control[?]. (Might not be possble) And what happens when using <fx:root> and it's loaded into a ControlPane?
+- [] Possibly add code to FXMonad (or whatever eventually does it) to detect if the custom control whose controller is being included is a ControlPane, which might mean that it, rather than the controller, should be the Control[?]. (Might not be possble) And what happens when using <fx:root> and it's loaded into a ControlPane?
 
 - [X] Create a method to register new classes in Control.lookups. Expecting users to interact directly with it isn't realistic.
 
-- [ ] Create injectable "error display strategy" method; it shouldn't necessary for this library to preemptively decide to use tooltips.
+- [] Create injectable "error display strategy" method; it shouldn't necessary for this library to preemptively decide to use tooltips.
 
 - [X] Ensure @FXMonad macro isn't required
 
@@ -22,11 +22,11 @@ class Controller {
 }
 ```
 
-- [ ] Maybe there should be implementations that just wrap JavaFX
+- [] Maybe there should be implementations that just wrap JavaFX
 
 The amount of layering of wrappers here is a pain. It's required to wrap JavaFX controls but it's not necessarily required to wrap ScalaFX controls, which wrap JavaFX controls. They could be distinguished by "import fxmonad.sfx.\_" vs "import fxmonad.jfx.\_"
 
-- [ ] Gradio-like easy control initialization
+- [] Gradio-like easy control initialization
 
 Gradio has a very easy initialization for UIs that don't require much control over layout and styling that looks like 
 
@@ -43,7 +43,7 @@ with gr.Blocks() as demo:
 
 I'm not sure if something like this is possible with this kind of integration with JavaFX while preserving the integration with FXML (which is my priority right now. I guess if you want Gradio, use Gradio; obviously, I think Gradio's pretty neat), but if it is, it should be done. I'm not sure why Gradio uses the "with" block; it's a funny use of "with" because it seems to require the initialization be complete by the time the "close" on "demo" happens and instead of discarding the resource "demo" at the end of the block like you would with a database connection it uses that as a signal that initialization is done, but without context parameters I don't understand how the value in the "demo" variable is related to inside the "with" block. Getting it to work in Scala will probably require learning that. Maybe it will be enough to use the @FXML-tagged "initialize" function.
 
-- [ ] Support for Future objects
+- [] Support for Future objects
 
 Writing the description below of ComboBox suggests that it should be writable as 
 
@@ -56,17 +56,17 @@ provinces(countries) = (country: String) => {
 
 so Control#update[A, B](Control[A], f: (A) => Control[B]) should be matched by Control#update[A, B](Control[A], f: (A) => Future[Control[B]]) or maybe Control#update[F[_]: Monad[F], A, B](Control[A], f: (A) => F[Control[B]])
 
-- [ ] Better understanding of SFXProxy: 1. whether there's a better way to "replay" changes made in controller functions, 2. which functions need "throwError" added to them to ensure they aren't accidentally used in unsupported ways, 3. which properties need to be subscribed to to replay changes. I'm torn between only adding support for properties once a use-case has been demonstrated and not wanting to leave things unimplemented because I didn't think of something. I suspect this is a conflict between my normal experience as a corporate services developer and the fact that this is more like a product [Joel Spolsky's 5 worlds](https://www.joelonsoftware.com/2002/05/06/five-worlds/) (What he calls Internal and Shrinkwrap, but I think is better looked at as Service and Product).
+- [] Better understanding of SFXProxy: 1. whether there's a better way to "replay" changes made in controller functions, 2. which functions need "throwError" added to them to ensure they aren't accidentally used in unsupported ways, 3. which properties need to be subscribed to to replay changes. I'm torn between only adding support for properties once a use-case has been demonstrated and not wanting to leave things unimplemented because I didn't think of something. I suspect this is a conflict between my normal experience as a corporate services developer and the fact that this is more like a product [Joel Spolsky's 5 worlds](https://www.joelonsoftware.com/2002/05/06/five-worlds/) (What he calls Internal and Shrinkwrap, but I think is better looked at as Service and Product).
 
-- [ ] Forgot I didn't finish fleshing out SFXProxy.
+- [] Forgot I didn't finish fleshing out SFXProxy.
 
 ## Controls
 
-- [ ] Changes in the proxies to styleClass are being mismanaged because the Change vocabulary isn't robust enough.
+- [] Changes in the proxies to styleClass are being mismanaged because the Change vocabulary isn't robust enough.
 
-- [ ] Custom controls. This is already implemented (mostly) in the branch add-pane-control, but I there are some TODOs that need to be considered.
+- [] Custom controls. This is already implemented (mostly) in the branch add-pane-control, but I there are some TODOs that need to be considered.
 
-- [ ] ComboBox
+- [] ComboBox
 
 This should generally include a feature to bind the list of selections, something like 
 
@@ -96,14 +96,42 @@ provinces(countries) = (country: String) => {
 
 and this would want to work for ComboBox, ComobList, but also Table without having a "selected" property (This last bit is the difficult one, because that would be a ControlList[DataObject], it wouldn't also be a Control[DataObject]). I think these traits should mix together without requiring each other.
 
-- [ ] More controls
+- [] More controls
 
 This list should actually be expanded to include each control specifically so they can be checked off. I'm just not entirely sure what the list should include. It's probably not worth including some things, like GridPane. If you need control of GridPane, you aren't interested entirely in the monadic form. Should that encourage you away from this library? Would it be prohibitive to mix usage together, make your business logic easier but still enabling you to access the UI controls? It would be nice if there's value to this even when you don't give up accessing JavaFX directly; I'm not sure it's entirely about hiding JavaFX from the developer, only making dealing with it optional and being able to invisibly mix-in other controls systems (like wearables) possible.
 
-- [ ] Moving off ROADMAP.md to a better maintained Issues list in GitHub.com
+- [] Moving off ROADMAP.md to a better maintained Issues list in GitHub.com
+
+- [] Use case: right forefinger means "fire" when the left ringfinger is not touched, but means "increment volume" when the left ringfinger is touched. I would assume this would be two Control[?] objects (actually, a Control[?] and an Emitter[?]), and pressing the left ringfinger would change whether the HID is in the container or not, and otherwise there would be a no-op. How does the binding work now? Would it be bound to the container, or to the internal control? I forget. I don't think there's a no-op control, and containers are not designed to be empty. I would expect a Control[?] for "volume" that contains either a device with two buttons, or a no-op, and an Emitter[?] that contains either a device with the button, or a no-op.
+
+```
+val noopVolume: Control[Volumn] = ...
+val braceletVolume: Control[Volume] = ...
+val volume: Control[Volume] = ...
+val braceletFire: Emitter[Command] = ...
+val noopFire: Emitter[Command] = ...
+val fire: Emitter[Command] = ...
+val contextSwitcher: Control[Bool] = ... // Is this better as an Emitter? Because they are mutually exclusive states, I wonder about the stability with an Emitter.
+
+volume(contextSwitcher) = (pressed: Boolean) => {
+  if (!pressed) = braceletVolume else noopVolume
+}
+fire(contextSwitcher) = (pressed: Boolean) => {
+  if (pressed) = braceletFire else noopFire
+}
+```
+
+    Currently, it's not possible to bind to an Emitter. Switching the object makes sense in this case. Maybe it would make sense for something like changing the text on a button.
+
+    There's no Emitter container that would allow switching out an Emitter. It suggests the question: if you are listening to a container, should events that the contained Emitter publishes be passed up? You could listen to one Emitter, whether or not it's in a container, or listen to the container and get whatever it publishes, whichever item is in it (in that case getting the message twice, which may or not be a problem).
+
+    Should it be possible for something to be both a Control[?] and an Emitter[?]? Like, when you want to send a message to an API when the volume setting changes, you could:
+        1. Add a listener to the property using other means.
+        1. Put a side-effect in something like a Control[Volume] that could either print the volume or send the event to the API or both.
+        1. Use it as a Control[Volume] when interacting with the volume but also add a subscription to the Emitter event. Adding a type that is both a Control and an Emitter would allow a macro to be used to create such a thing. Maybe all Emitter classes should be Control classes if I want to add binding to it as above? The types would be different. Sometimes you might want to bind the display text, and sometimes you might want to bind the event data (some slug published with the event); it would only be an "output" property (like Label) not an "input" property (like a TextField)? I haven't made that distinction anywhere in the documentation (let alone bidirectional properties, like being able to set and read from a TextField)
 
 ## Project Overhead
 
-- [ ] Add code coverage reporting
+- [] Add code coverage reporting. This might be partially done, but it's not checking anything during the workflows and it's not reporting to a service that allows publishing of a badge.
 
-- [ ] Add/configure linter. I added scalafmt and scalafix and ran "scalafix/RemoveUnused", but there's probably more to be done.
+- [] Add/configure linter. I added scalafmt and scalafix and ran "scalafix/RemoveUnused", but there's probably more to be done.
