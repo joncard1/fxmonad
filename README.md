@@ -25,3 +25,14 @@ Because c1 is a Control[Int] and c2 is a Control[Boolean], it is known that the 
 A lot of this is done already with property binding. However, this handles type validation, format checking, and frees up the work of extracting the value from controls from different properties. The logic functions are similar in concept to a Monad's "bind" operator (usually flatMap in Scala) and makes different controls more interoperable.
 
 Not much is built yet, but I thought it was a good start and I'm interested in getting feedback on it, or other contributors. Let me know if you think it's going someplace you're interested in.
+## Building and publishing
+
+`sbt package` builds `fxmonad_3-0.1.0-SNAPSHOT.jar` (under `target/scala-3.8.4/`), a single jar containing the `core` and `macros` projects. The `testApp` demo is not included.
+
+`sbt publishLocal` publishes that artifact (`jackflashtech:fxmonad_3:0.1.0-SNAPSHOT`) to the local Ivy repository (`~/.ivy2/local`). Depend on it with:
+
+```scala
+libraryDependencies += "jackflashtech" %% "fxmonad" % "0.1.0-SNAPSHOT"
+```
+
+Projects using `@FXMonad`/`@FXEmitter` also need `scala3-compiler` on their compile classpath (it is a `Provided` dependency of the artifact).
