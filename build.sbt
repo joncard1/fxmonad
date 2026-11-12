@@ -27,6 +27,7 @@ lazy val core = project
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaReplTool,
     Test / fork := true,
     Test / javaOptions ++= Seq(
       "-Dtestfx.headless=true",
@@ -46,7 +47,8 @@ lazy val macros = project
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
-    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaReplTool
   )
 
 lazy val testApp = project
@@ -62,7 +64,8 @@ lazy val testApp = project
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
-    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaReplTool
   )
 
 lazy val root = project
