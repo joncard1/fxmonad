@@ -9,7 +9,6 @@ val fasterxml3Version =
   "3.2.4" // Scaladoc 3.10.0 apparently has dependencies on both fasterxml jackson-core 3 and 2, which seems unwise, but the dependency on 3 is on 3.2.1 and the last LTS version of 3 is 3.1, so this is the latest release.
 val fasterxml2Version = "2.21.8" // Latest patch of the most recent LTS.
 
-
 lazy val core = project
   .in(file("core"))
   .settings(
