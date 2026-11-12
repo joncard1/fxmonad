@@ -9,6 +9,7 @@ val fasterxml3Version =
   "3.2.4" // Scaladoc 3.10.0 apparently has dependencies on both fasterxml jackson-core 3 and 2, which seems unwise, but the dependency on 3 is on 3.2.1 and the last LTS version of 3 is 3.1, so this is the latest release.
 val fasterxml2Version = "2.21.8" // Latest patch of the most recent LTS.
 val jsoupVersion = "1.24.1" // Latest patch. They don't seem to have a LTS policy, according to Google
+val assertjVersion = "3.27.7" // Updated from 3.13.2 in response to Dependabot alert
 
 lazy val core = project
   .in(file("core"))
@@ -20,6 +21,7 @@ lazy val core = project
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.19.0" % Test,
     libraryDependencies += "org.testfx" % "testfx-core" % "4.0.18" % Test,
     libraryDependencies += "org.testfx" % "openjfx-monocle" % "21.0.2" % Test,
+    libraryDependencies += "org.assertj" % "assertj-core" % assertjVersion % Test,
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
@@ -76,6 +78,7 @@ lazy val root = project
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaReplTool,
     // The published fxmonad artifact bundles core and macros; testApp is never published.
     Compile / sources := Seq.empty,
     Test / sources := Seq.empty,
