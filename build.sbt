@@ -8,6 +8,7 @@ val jfxVersion = "25.0.2-R37"
 val fasterxml3Version =
   "3.2.4" // Scaladoc 3.10.0 apparently has dependencies on both fasterxml jackson-core 3 and 2, which seems unwise, but the dependency on 3 is on 3.2.1 and the last LTS version of 3 is 3.1, so this is the latest release.
 val fasterxml2Version = "2.21.8" // Latest patch of the most recent LTS.
+val jsoupVersion = "1.24.1" // Latest patch. They don't seem to have a LTS policy, according to Google
 
 lazy val core = project
   .in(file("core"))
@@ -23,6 +24,7 @@ lazy val core = project
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
     Test / fork := true,
     Test / javaOptions ++= Seq(
       "-Dtestfx.headless=true",
@@ -41,7 +43,8 @@ lazy val macros = project
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
-    libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool
+    libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool
   )
 
 lazy val testApp = project
@@ -56,7 +59,8 @@ lazy val testApp = project
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
-    libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool
+    libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool
   )
 
 lazy val root = project
@@ -71,6 +75,7 @@ lazy val root = project
     libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % fasterxml2Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
+    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
     // The published fxmonad artifact bundles core and macros; testApp is never published.
     Compile / sources := Seq.empty,
     Test / sources := Seq.empty,
