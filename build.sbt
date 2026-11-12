@@ -10,6 +10,7 @@ val fasterxml3Version =
 val fasterxml2Version = "2.21.8" // Latest patch of the most recent LTS.
 val jsoupVersion = "1.24.1" // Latest patch. They don't seem to have a LTS policy, according to Google
 val assertjVersion = "3.27.7" // Updated from 3.13.2 in response to Dependabot alert
+val jlineVersion = "3.30.17" // Upldated from 3.8.4 inr response to Dependabot alert. They don't have an LTS policy, and the latest patch in v3 is 3.30.17
 
 lazy val core = project
   .in(file("core"))
@@ -27,7 +28,7 @@ lazy val core = project
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
-    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaReplTool,
+    libraryDependencies += "org.jline" % "jline-reader" % jlineVersion % Configurations.ScalaReplTool,
     Test / fork := true,
     Test / javaOptions ++= Seq(
       "-Dtestfx.headless=true",
@@ -48,7 +49,7 @@ lazy val macros = project
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
-    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaReplTool
+    libraryDependencies += "org.jline" % "jline-reader" % jlineVersion % Configurations.ScalaReplTool
   )
 
 lazy val testApp = project
@@ -65,7 +66,7 @@ lazy val testApp = project
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
-    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaReplTool
+    libraryDependencies += "org.jline" % "jline-reader" % jlineVersion % Configurations.ScalaReplTool
   )
 
 lazy val root = project
@@ -81,7 +82,7 @@ lazy val root = project
     libraryDependencies += "tools.jackson.core" % "jackson-core" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "tools.jackson.core" % "jackson-databind" % fasterxml3Version % Configurations.ScalaDocTool,
     libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaDocTool,
-    libraryDependencies += "org.jsoup" % "jsoup" % jsoupVersion % Configurations.ScalaReplTool,
+    libraryDependencies += "org.jline" % "jline-reader" % jlineVersion % Configurations.ScalaReplTool,
     // The published fxmonad artifact bundles core and macros; testApp is never published.
     Compile / sources := Seq.empty,
     Test / sources := Seq.empty,
